@@ -1,0 +1,41 @@
+<p-toolbar aria-label="Barra de herramientas del caso" role="toolbar">
+  <div class="p-toolbar-group-start" role="group" aria-label="Acciones principales">
+    <p-button icon="pi pi-search" label="Consultar" (onClick)="executeQuery.emit()"
+      pTooltip="Ejecutar consulta" tooltipPosition="bottom"
+      aria-label="Ejecutar consulta para buscar casos" [tabindex]="100"></p-button>
+    <p-button icon="pi pi-save" label="Guardar" (onClick)="save.emit()" severity="success"
+      pTooltip="Guardar caso (Ctrl+S)" tooltipPosition="bottom"
+      aria-label="Guardar cambios del caso. Atajo: Control más S" [tabindex]="101"></p-button>
+    <span class="p-toolbar-separator" role="separator" aria-hidden="true"></span>
+  </div>
+
+  <div class="p-toolbar-group-center" role="group" aria-label="Navegación de registros">
+    <p-button icon="pi pi-angle-double-left" (onClick)="navigateFirst.emit()"
+      pTooltip="Primer registro" aria-label="Ir al primer registro" [text]="true" [tabindex]="102"></p-button>
+    <p-button icon="pi pi-angle-left" (onClick)="navigatePrevious.emit()"
+      pTooltip="Registro anterior" aria-label="Ir al registro anterior" [text]="true" [tabindex]="103"></p-button>
+    <p-button icon="pi pi-angle-right" (onClick)="navigateNext.emit()"
+      pTooltip="Siguiente registro" aria-label="Ir al siguiente registro" [text]="true" [tabindex]="104"></p-button>
+    <p-button icon="pi pi-angle-double-right" (onClick)="navigateLast.emit()"
+      pTooltip="Último registro" aria-label="Ir al último registro" [text]="true" [tabindex]="105"></p-button>
+  </div>
+
+  <div class="p-toolbar-group-end" role="group" aria-label="Acciones adicionales">
+    <p-button icon="pi pi-list" label="Características" (onClick)="causeCharacteristics.emit()"
+      pTooltip="Características de causa (Ctrl+L)" tooltipPosition="bottom"
+      aria-label="Abrir características de causa. Atajo: Control más L" [tabindex]="106"></p-button>
+    <p-button icon="pi pi-user-plus" label="Crear Inexistente" (onClick)="createInexistentUser.emit()"
+      pTooltip="Crear usuario inexistente" tooltipPosition="bottom"
+      aria-label="Crear usuario inexistente" [tabindex]="107"></p-button>
+    <p-button icon="pi pi-chart-bar" label="Evaluaciones" (onClick)="evaluations.emit()"
+      pTooltip="Evaluaciones" tooltipPosition="bottom"
+      aria-label="Ver evaluaciones" [tabindex]="108"></p-button>
+    <span class="p-toolbar-separator" role="separator" aria-hidden="true"></span>
+    <p-button icon="pi pi-print" (onClick)="print.emit()"
+      pTooltip="Imprimir" aria-label="Imprimir reporte" [text]="true" [tabindex]="109"></p-button>
+    <p-button icon="pi pi-question-circle" (onClick)="help.emit()"
+      pTooltip="Ayuda" aria-label="Abrir ayuda" [text]="true" [tabindex]="110"></p-button>
+    <p-button icon="pi pi-sign-out" (onClick)="exit.emit()" severity="danger"
+      pTooltip="Salir" aria-label="Salir de la aplicación" [text]="true" [tabindex]="111"></p-button>
+  </div>
+</p-toolbar>

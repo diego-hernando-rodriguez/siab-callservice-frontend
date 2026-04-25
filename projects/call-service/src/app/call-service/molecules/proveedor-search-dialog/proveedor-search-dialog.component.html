@@ -1,0 +1,21 @@
+<p-dialog header="Búsqueda de Proveedor" [(visible)]="visible" [modal]="true" [style]="{width: '80vw'}"
+  (onHide)="close()" role="dialog" aria-label="Búsqueda de proveedor">
+  <div class="grid mb-3">
+    <div class="col-3"><label>Servicio</label><input pInputText [(ngModel)]="servCodigo" type="number"></div>
+    <div class="col-3"><label>Clase</label><input pInputText [(ngModel)]="clservCodigo" type="number"></div>
+    <div class="col-3"><label>Ciudad</label><input pInputText [(ngModel)]="locgeCodigo" type="number"></div>
+    <div class="col-3 flex align-items-end"><button pButton label="Buscar" icon="pi pi-search" (click)="onSearch()"></button></div>
+  </div>
+  <p-table [value]="proveedores" [rows]="10" [paginator]="true" role="grid">
+    <ng-template pTemplate="header">
+      <tr><th>Nombre</th><th>Documento</th><th>Zona</th><th>Celular</th><th>Elite</th><th>Acción</th></tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-prov>
+      <tr>
+        <td>{{prov.nombre}}</td><td>{{prov.personaNumeroDocumento}}</td><td>{{prov.zona}}</td>
+        <td>{{prov.celular}}</td><td><i *ngIf="prov.elite === 'S'" class="pi pi-star text-yellow-500"></i></td>
+        <td><button pButton icon="pi pi-check" (click)="onSelect(prov)" label="Seleccionar"></button></td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

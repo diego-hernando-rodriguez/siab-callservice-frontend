@@ -1,0 +1,35 @@
+<div class="servicio-list" role="region" aria-label="Lista de servicios a prestar">
+  <div class="mb-3">
+    <button pButton icon="pi pi-plus" label="Agregar Servicio" (click)="onAddService()" aria-label="Agregar servicio"></button>
+  </div>
+  <p-table [value]="servicios" [rows]="10" [paginator]="true" selectionMode="single" [(selection)]="selectedServicio"
+    role="grid" aria-label="Tabla de servicios prestados">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>N° Autorización</th><th>Servicio</th><th>Clase</th><th>Proveedor</th>
+        <th>Estado</th><th>Valor</th><th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-servicio>
+      <tr [pSelectableRow]="servicio">
+        <td>{{servicio.numeroAutorizacion}}</td>
+        <td>{{servicio.dspServCodigo || servicio.servCodigo}}</td>
+        <td>{{servicio.dspClaseServicio || servicio.clservCodigo}}</td>
+        <td>{{servicio.dspPersonaNombre || servicio.personaNombre}}</td>
+        <td>{{servicio.dspEstadoServ || servicio.estadoServicio}}</td>
+        <td>{{servicio.valorTotal | number:'1.2-2'}}</td>
+        <td>
+          <button pButton icon="pi pi-pencil" (click)="onEditService(servicio)" [text]="true" pTooltip="Editar" aria-label="Editar servicio"></button>
+          <button pButton icon="pi pi-user" (click)="onSearchProvider()" [text]="true" pTooltip="Asignar Proveedor" aria-label="Asignar proveedor"></button>
+          <button pButton icon="pi pi-times" (click)="onCancelService(servicio)" [text]="true" severity="danger" pTooltip="Anular" aria-label="Anular servicio"></button>
+          <button pButton icon="pi pi-envelope" [text]="true" pTooltip="Enviar correo" aria-label="Enviar correo"></button>
+          <button pButton icon="pi pi-file" [text]="true" pTooltip="Generar carta" aria-label="Generar carta"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage"><tr><td colspan="7">No hay servicios registrados</td></tr></ng-template>
+  </p-table>
+
+  <!-- Provider Search Dialog -->
+  <app-proveedor-search-dialog *ngIf="showProveedorSearch" [(visible)]="showProveedorSearch"></app-proveedor-search-dialog>
+</div>

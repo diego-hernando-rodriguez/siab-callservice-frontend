@@ -1,0 +1,3 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+@Component({ selector: 'app-formatos-dialog', template: `<p-dialog header="Formatos" [(visible)]="visible" [modal]="true" [style]="{width:'60vw'}" (onHide)="close()" role="dialog"><div class="p-4"><p>Selección de formatos de documento</p></div><ng-template pTemplate="footer"><button pButton label="Cerrar" (click)="close()"></button></ng-template></p-dialog>` })
+export class FormatosDialogComponent { @Input() visible = false; @Output() visibleChange = new EventEmitter<boolean>(); close(): void { this.visible = false; this.visibleChange.emit(false); } }

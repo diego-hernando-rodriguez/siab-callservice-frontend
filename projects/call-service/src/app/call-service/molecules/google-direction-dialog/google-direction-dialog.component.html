@@ -1,0 +1,17 @@
+<p-dialog header="Búsqueda de Dirección - Google Maps" [(visible)]="visible" [modal]="true" [style]="{width: '60vw'}"
+  (onHide)="close()" role="dialog" aria-label="Búsqueda de dirección en Google Maps">
+  <div class="p-inputgroup mb-3">
+    <input pInputText [(ngModel)]="searchAddress" placeholder="Ingrese dirección" (keydown.enter)="onSearch()" aria-label="Dirección a buscar">
+    <button pButton icon="pi pi-search" (click)="onSearch()" label="Buscar" aria-label="Buscar dirección"></button>
+  </div>
+  <p-table [value]="results" [rows]="10" role="grid" aria-label="Resultados de dirección">
+    <ng-template pTemplate="header"><tr><th>Dirección</th><th>Ciudad</th><th>Acción</th></tr></ng-template>
+    <ng-template pTemplate="body" let-addr>
+      <tr>
+        <td>{{addr.direccion}}</td><td>{{addr.ciudad}}</td>
+        <td><button pButton icon="pi pi-check" (click)="onSelect(addr)" label="Seleccionar" aria-label="Seleccionar dirección"></button></td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage"><tr><td colspan="3">No se encontraron resultados</td></tr></ng-template>
+  </p-table>
+</p-dialog>

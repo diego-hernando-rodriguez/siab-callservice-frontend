@@ -1,0 +1,125 @@
+<div class="llamada-form" [formGroup]="llamadaForm" role="form" aria-label="Formulario de registro de llamada">
+  <div class="grid">
+    <!-- Step 1: City Selection -->
+    <div class="col-12 md:col-6 lg:col-4">
+      <label for="locgeCodigo" id="lbl-ciudad" aria-label="Ciudad">Ciudad *</label>
+      <p-dropdown [options]="ciudades" formControlName="locgeCodigo"
+        optionLabel="nombre" optionValue="locgeCodigo"
+        [filter]="true" filterBy="nombre" [showClear]="true"
+        placeholder="Seleccione una ciudad" [tabindex]="1"
+        aria-labelledby="lbl-ciudad"
+        (onChange)="onCitySelected($event.value)">
+      </p-dropdown>
+    </div>
+
+    <!-- Step 2: Risk Type -->
+    <div class="col-12 md:col-6 lg:col-4">
+      <label for="riesgoCodigo" id="lbl-riesgo">Riesgo *</label>
+      <div class="p-inputgroup">
+        <input pInputText formControlName="riesgoCodigo" [tabindex]="2" aria-labelledby="lbl-riesgo" placeholder="Placa / Cédula">
+        <button pButton icon="pi pi-search" (click)="onRiskSearch()" [tabindex]="3" aria-label="Buscar riesgo"></button>
+      </div>
+    </div>
+
+    <!-- Step 3: Contract/Policy -->
+    <div class="col-12 md:col-6 lg:col-4">
+      <label for="contNumeroContrato" id="lbl-contrato">Contrato</label>
+      <input pInputText formControlName="contNumeroContrato" [tabindex]="4" aria-labelledby="lbl-contrato" [readOnly]="true">
+    </div>
+
+    <!-- Ramo/Producto (auto-populated) -->
+    <div class="col-12 md:col-3">
+      <label id="lbl-ramo">Ramo</label>
+      <input pInputText formControlName="ramoCodigo" [tabindex]="5" aria-labelledby="lbl-ramo" [readOnly]="true">
+    </div>
+    <div class="col-12 md:col-3">
+      <label id="lbl-producto">Producto</label>
+      <input pInputText formControlName="productoCodigo" [tabindex]="6" aria-labelledby="lbl-producto" [readOnly]="true">
+    </div>
+
+    <!-- Step 4: Cause Selection -->
+    <div class="col-12 md:col-6">
+      <label for="causaCodigo" id="lbl-causa">Causa *</label>
+      <p-dropdown [options]="causas" formControlName="causaCodigo"
+        optionLabel="descripcion" optionValue="causaCodigo"
+        [filter]="true" [showClear]="true"
+        placeholder="Seleccione una causa" [tabindex]="7"
+        aria-labelledby="lbl-causa">
+      </p-dropdown>
+    </div>
+
+    <!-- User Document -->
+    <div class="col-12 md:col-4">
+      <label for="usuNumeroDocumento" id="lbl-doc">Documento Usuario *</label>
+      <input pInputText formControlName="usuNumeroDocumento" [tabindex]="8" aria-labelledby="lbl-doc">
+    </div>
+    <div class="col-12 md:col-2">
+      <label for="usuTipoDocumento" id="lbl-tipo-doc">Tipo Doc</label>
+      <input pInputText formControlName="usuTipoDocumento" [tabindex]="9" aria-labelledby="lbl-tipo-doc">
+    </div>
+
+    <!-- Step 5: Address -->
+    <div class="col-12 md:col-8">
+      <label for="direccion" id="lbl-dir">Dirección *</label>
+      <div class="p-inputgroup">
+        <input pInputText formControlName="direccion" [tabindex]="10" aria-labelledby="lbl-dir">
+        <button pButton icon="pi pi-map-marker" (click)="onGeocode()" [tabindex]="11" aria-label="Georreferenciación"></button>
+        <button pButton icon="pi pi-globe" (click)="onGoogleDirection()" [tabindex]="12" aria-label="Buscar en Google Maps"></button>
+      </div>
+    </div>
+
+    <!-- Complementary address fields -->
+    <div class="col-12 md:col-4">
+      <label for="direccionComplemento" id="lbl-comp">Dirección Complemento</label>
+      <input pInputText formControlName="direccionComplemento" [tabindex]="13" aria-labelledby="lbl-comp">
+    </div>
+    <div class="col-12 md:col-4">
+      <label for="direccionDestino" id="lbl-dest">Dirección Destino</label>
+      <input pInputText formControlName="direccionDestino" [tabindex]="14" aria-labelledby="lbl-dest">
+    </div>
+    <div class="col-12 md:col-4">
+      <label for="direccionGeoReferencia" id="lbl-geo">Dirección Geo Referencia</label>
+      <input pInputText formControlName="direccionGeoReferencia" [tabindex]="15" aria-labelledby="lbl-geo" [readOnly]="true">
+    </div>
+
+    <!-- Phone -->
+    <div class="col-12 md:col-3">
+      <label for="telefonoLlamada" id="lbl-tel">Teléfono</label>
+      <input pInputText formControlName="telefonoLlamada" [tabindex]="16" aria-labelledby="lbl-tel">
+    </div>
+
+    <!-- Step 6: Observations -->
+    <div class="col-12">
+      <label for="observacionesLar" id="lbl-obs">Observaciones</label>
+      <textarea pInputTextarea formControlName="observacionesLar" [rows]="4" [tabindex]="17"
+        aria-labelledby="lbl-obs" class="w-full"></textarea>
+    </div>
+  </div>
+
+  <!-- Risk Search Dialog -->
+  <app-riesgo-search
+    *ngIf="showRiesgoSearch"
+    [(visible)]="showRiesgoSearch"
+    (riesgoSelected)="onRiskSelected($event)">
+  </app-riesgo-search>
+
+  <!-- Duplicate Case Alert -->
+  <app-duplicate-case-alert
+    *ngIf="showDuplicateAlert"
+    [message]="duplicateMessage"
+    [(visible)]="showDuplicateAlert">
+  </app-duplicate-case-alert>
+
+  <!-- Pico y Placa Alert -->
+  <app-pico-placa-alert
+    *ngIf="showPicoPlacaAlert"
+    [message]="picoPlacaMessage"
+    [(visible)]="showPicoPlacaAlert">
+  </app-pico-placa-alert>
+
+  <!-- Google Direction Dialog -->
+  <app-google-direction-dialog
+    *ngIf="showGoogleDirection"
+    [(visible)]="showGoogleDirection">
+  </app-google-direction-dialog>
+</div>

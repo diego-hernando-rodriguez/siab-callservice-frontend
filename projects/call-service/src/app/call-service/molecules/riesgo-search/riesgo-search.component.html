@@ -1,0 +1,20 @@
+<p-dialog header="Búsqueda de Riesgo" [(visible)]="visible" [modal]="true" [style]="{width: '70vw'}"
+  [closable]="true" (onHide)="close()" role="dialog" aria-label="Búsqueda de riesgo asegurado">
+  <div class="p-inputgroup mb-3">
+    <input pInputText [(ngModel)]="searchValue" placeholder="Ingrese placa o cédula" (keydown.enter)="onSearch()" aria-label="Valor de búsqueda">
+    <button pButton icon="pi pi-search" (click)="onSearch()" label="Buscar" aria-label="Buscar riesgo"></button>
+  </div>
+  <p-table [value]="riesgos" [loading]="loading" [rows]="10" [paginator]="true" role="grid" aria-label="Resultados de búsqueda de riesgo">
+    <ng-template pTemplate="header">
+      <tr><th>Contrato</th><th>Riesgo</th><th>Valor</th><th>Ramo</th><th>Producto</th><th>Acción</th></tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-riesgo>
+      <tr>
+        <td>{{riesgo.contNumero}}</td><td>{{riesgo.riesgoCodigo}}</td><td>{{riesgo.valor}}</td>
+        <td>{{riesgo.ramoCodigo}}</td><td>{{riesgo.productoCodigo}}</td>
+        <td><button pButton icon="pi pi-check" (click)="onSelect(riesgo)" label="Seleccionar" aria-label="Seleccionar riesgo"></button></td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage"><tr><td colspan="6">No se encontraron riesgos</td></tr></ng-template>
+  </p-table>
+</p-dialog>

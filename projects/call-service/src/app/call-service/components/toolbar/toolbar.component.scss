@@ -1,0 +1,13 @@
+::host ::ng-deep {
+  .p-toolbar {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0;
+  }
+  .p-toolbar-separator {
+    margin: 0 0.5rem;
+    border-left: 1px solid #dee2e6;
+    height: 1.5rem;
+  }
+  .p-button { margin-right: 0.25rem; }
+}

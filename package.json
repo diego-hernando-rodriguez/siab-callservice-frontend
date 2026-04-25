@@ -1,0 +1,36 @@
+{
+  "name": "siab-callservice-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "ng serve shell",
+    "start:call-service": "ng serve call-service",
+    "build": "ng build call-service",
+    "build:shell": "ng build shell",
+    "build:call-service": "ng build call-service",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^17.3.0",
+    "@angular/common": "^17.3.0",
+    "@angular/compiler": "^17.3.0",
+    "@angular/core": "^17.3.0",
+    "@angular/forms": "^17.3.0",
+    "@angular/platform-browser": "^17.3.0",
+    "@angular/platform-browser-dynamic": "^17.3.0",
+    "@angular/router": "^17.3.0",
+    "primeng": "^17.18.0",
+    "primeicons": "^7.0.0",
+    "primeflex": "^3.3.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.6.0",
+    "zone.js": "~0.14.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.3.0",
+    "@angular/cli": "^17.3.0",
+    "@angular/compiler-cli": "^17.3.0",
+    "@types/node": "^20.0.0",
+    "typescript": "~5.4.0"
+  }
+}

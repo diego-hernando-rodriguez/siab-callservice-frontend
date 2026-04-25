@@ -1,0 +1,3 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+@Component({ selector: 'app-result-cartas-dialog', template: `<p-dialog header="Resultado de Cartas" [(visible)]="visible" [modal]="true" [style]="{width:'60vw'}" (onHide)="close()" role="dialog"><div class="p-4"><p>Resultados de generación de cartas</p></div><ng-template pTemplate="footer"><button pButton label="Cerrar" (click)="close()"></button></ng-template></p-dialog>` })
+export class ResultCartasDialogComponent { @Input() visible = false; @Output() visibleChange = new EventEmitter<boolean>(); close(): void { this.visible = false; this.visibleChange.emit(false); } }

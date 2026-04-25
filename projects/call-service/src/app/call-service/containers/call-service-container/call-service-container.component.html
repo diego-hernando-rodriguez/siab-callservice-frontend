@@ -1,0 +1,83 @@
+<div class="call-service-container" role="main" aria-label="SIAB - Servicio de Llamadas">
+  <!-- Toolbar -->
+  <app-toolbar
+    (executeQuery)="onExecuteQuery()"
+    (save)="onSave()"
+    (exit)="onExit()"
+    (navigateFirst)="onNavigateFirst()"
+    (navigatePrevious)="onNavigatePrevious()"
+    (navigateNext)="onNavigateNext()"
+    (navigateLast)="onNavigateLast()"
+    (print)="onPrint()"
+    (help)="onHelp()"
+    (createInexistentUser)="onCreateInexistentUser()"
+    (evaluations)="onEvaluations()"
+    (causeCharacteristics)="onCauseCharacteristics()"
+    role="toolbar"
+    aria-label="Barra de herramientas principal">
+  </app-toolbar>
+
+  <!-- Tab View - 5 tabs matching Oracle Forms canvas -->
+  <p-tabView #tabView
+    [(activeIndex)]="activeTabIndex"
+    (onChange)="onTabChange($event)"
+    [scrollable]="true"
+    role="tablist"
+    aria-label="Pestañas principales del caso">
+
+    <!-- Tab 1: Llamada (Case Registration) -->
+    <p-tabPanel header="Llamada"
+      role="tabpanel"
+      aria-label="Pestaña Llamada - Registro de caso"
+      [attr.aria-selected]="activeTabIndex === 0">
+      <ng-template pTemplate="content">
+        <app-llamada-form></app-llamada-form>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 2: Servicios a Prestar (Service Assignment) -->
+    <p-tabPanel header="Servicios a Prestar"
+      role="tabpanel"
+      aria-label="Pestaña Servicios a Prestar - Asignación de servicios"
+      [attr.aria-selected]="activeTabIndex === 1">
+      <ng-template pTemplate="content">
+        <app-servicio-list></app-servicio-list>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 3: Caracteristicas (Cause Characteristics - CALLA) -->
+    <p-tabPanel header="Características"
+      role="tabpanel"
+      aria-label="Pestaña Características - Características de la causa"
+      [attr.aria-selected]="activeTabIndex === 2">
+      <ng-template pTemplate="content">
+        <app-causa-characteristics></app-causa-characteristics>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 4: Recurso Confiable -->
+    <p-tabPanel header="Recurso Confiable"
+      role="tabpanel"
+      aria-label="Pestaña Recurso Confiable"
+      [attr.aria-selected]="activeTabIndex === 3">
+      <ng-template pTemplate="content">
+        <app-recurso-confiable></app-recurso-confiable>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 5: Informacion Servicio -->
+    <p-tabPanel header="Información Servicio"
+      role="tabpanel"
+      aria-label="Pestaña Información del Servicio"
+      [attr.aria-selected]="activeTabIndex === 4">
+      <ng-template pTemplate="content">
+        <app-informacion-servicio></app-informacion-servicio>
+      </ng-template>
+    </p-tabPanel>
+  </p-tabView>
+
+  <!-- Keyboard shortcuts help (screen reader only) -->
+  <div class="sr-only" aria-live="polite">
+    Atajos de teclado: Ctrl+L para características de causa, Ctrl+S para guardar, F9 para abrir lista de valores
+  </div>
+</div>

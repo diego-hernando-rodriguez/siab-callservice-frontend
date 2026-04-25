@@ -1,0 +1,3 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+@Component({ selector: 'app-forma-astb-dialog', template: `<p-dialog header="Forma ASTB" [(visible)]="visible" [modal]="true" [style]="{width:'60vw'}" (onHide)="close()" role="dialog"><div class="p-4"><p>Contenido de Forma ASTB</p></div><ng-template pTemplate="footer"><button pButton label="Cerrar" (click)="close()"></button></ng-template></p-dialog>` })
+export class FormaAstbDialogComponent { @Input() visible = false; @Output() visibleChange = new EventEmitter<boolean>(); close(): void { this.visible = false; this.visibleChange.emit(false); } }
