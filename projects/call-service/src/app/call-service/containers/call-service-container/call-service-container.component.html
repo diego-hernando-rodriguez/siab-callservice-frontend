@@ -1,4 +1,6 @@
 <div class="call-service-container" role="main" aria-label="SIAB - Servicio de Llamadas">
+  <p-toast></p-toast>
+
   <!-- Toolbar -->
   <app-toolbar
     (executeQuery)="onExecuteQuery()"
@@ -17,67 +19,68 @@
     aria-label="Barra de herramientas principal">
   </app-toolbar>
 
-  <!-- Tab View - 5 tabs matching Oracle Forms canvas -->
+  <!-- Tab View -->
   <p-tabView #tabView
     [(activeIndex)]="activeTabIndex"
     (onChange)="onTabChange($event)"
     [scrollable]="true"
-    role="tablist"
-    aria-label="Pestañas principales del caso">
+    role="tablist">
 
-    <!-- Tab 1: Llamada (Case Registration) -->
-    <p-tabPanel header="Llamada"
-      role="tabpanel"
-      aria-label="Pestaña Llamada - Registro de caso"
-      [attr.aria-selected]="activeTabIndex === 0">
+    <!-- Tab 1: Llamada -->
+    <p-tabPanel header="Llamada" leftIcon="pi pi-phone">
       <ng-template pTemplate="content">
-        <app-llamada-form></app-llamada-form>
+        <app-llamada-form #llamadaForm
+          (caseSaved)="onCaseSaved($event)"
+          (caseLoaded)="onCaseLoaded($event)">
+        </app-llamada-form>
       </ng-template>
     </p-tabPanel>
 
-    <!-- Tab 2: Servicios a Prestar (Service Assignment) -->
-    <p-tabPanel header="Servicios a Prestar"
-      role="tabpanel"
-      aria-label="Pestaña Servicios a Prestar - Asignación de servicios"
-      [attr.aria-selected]="activeTabIndex === 1">
+    <!-- Tab 2: Servicios a Prestar -->
+    <p-tabPanel header="Servicios a Prestar" leftIcon="pi pi-cog"
+      [disabled]="!currentCaso?.numero">
       <ng-template pTemplate="content">
-        <app-servicio-list></app-servicio-list>
+        <app-servicio-list #servicioList></app-servicio-list>
       </ng-template>
     </p-tabPanel>
 
-    <!-- Tab 3: Caracteristicas (Cause Characteristics - CALLA) -->
-    <p-tabPanel header="Características"
-      role="tabpanel"
-      aria-label="Pestaña Características - Características de la causa"
-      [attr.aria-selected]="activeTabIndex === 2">
+    <!-- Tab 3: Características -->
+    <p-tabPanel header="Características" leftIcon="pi pi-list"
+      [disabled]="!currentCaso?.numero">
       <ng-template pTemplate="content">
         <app-causa-characteristics></app-causa-characteristics>
       </ng-template>
     </p-tabPanel>
 
     <!-- Tab 4: Recurso Confiable -->
-    <p-tabPanel header="Recurso Confiable"
-      role="tabpanel"
-      aria-label="Pestaña Recurso Confiable"
-      [attr.aria-selected]="activeTabIndex === 3">
+    <p-tabPanel header="Recurso Confiable" leftIcon="pi pi-shield"
+      [disabled]="!currentCaso?.numero">
       <ng-template pTemplate="content">
         <app-recurso-confiable></app-recurso-confiable>
       </ng-template>
     </p-tabPanel>
 
-    <!-- Tab 5: Informacion Servicio -->
-    <p-tabPanel header="Información Servicio"
-      role="tabpanel"
-      aria-label="Pestaña Información del Servicio"
-      [attr.aria-selected]="activeTabIndex === 4">
+    <!-- Tab 5: Información Servicio -->
+    <p-tabPanel header="Información Servicio" leftIcon="pi pi-info-circle"
+      [disabled]="!currentCaso?.numero">
       <ng-template pTemplate="content">
         <app-informacion-servicio></app-informacion-servicio>
       </ng-template>
     </p-tabPanel>
   </p-tabView>
 
-  <!-- Keyboard shortcuts help (screen reader only) -->
-  <div class="sr-only" aria-live="polite">
-    Atajos de teclado: Ctrl+L para características de causa, Ctrl+S para guardar, F9 para abrir lista de valores
-  </div>
+  <!-- Diálogo de consulta por número de caso -->
+  <p-dialog header="Consultar Caso" [(visible)]="showQueryDialog" [modal]="true"
+    [style]="{width: '400px'}" [closable]="true">
+    <div class="flex flex-column gap-3 pt-3">
+      <label class="font-bold">Número de caso / llamada:</label>
+      <input pInputText [(ngModel)]="queryNumero" (keydown.enter)="onQuerySubmit()"
+        placeholder="Ingrese el número" autofocus class="w-full" />
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button label="Consultar" icon="pi pi-search" (onClick)="onQuerySubmit()"></p-button>
+      <p-button label="Cancelar" icon="pi pi-times" (onClick)="showQueryDialog = false"
+        severity="secondary"></p-button>
+    </ng-template>
+  </p-dialog>
 </div>

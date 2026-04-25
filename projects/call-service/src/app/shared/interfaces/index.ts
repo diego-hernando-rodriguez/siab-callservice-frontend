@@ -42,6 +42,13 @@ export interface LlamadaDTO {
   alertaPyp?: string;
   cobertura360?: string;
   preferencial?: string;
+  placaRiesgo?: string;
+  altoValor?: string;
+  acuerdoCliente?: string;
+  origen?: string;
+  controlCarta?: string;
+  estadoPoliza?: string;
+  // Descriptive fields from PKG_DESCRIPTORES
   dspRamo?: string;
   dspProducto?: string;
   dspNombre?: string;
@@ -55,7 +62,10 @@ export interface LlamadaDTO {
   dspEnviadoCasoClick?: string;
   dspTipoAsistencia?: string;
   dspOpcionCobertura?: string;
+  dspCoberturaVehiculo?: string;
   excepciones?: number;
+  fechaInicioVig?: string;
+  fechaFinVig?: string;
 }
 
 export interface CasoRequest {
@@ -228,6 +238,9 @@ export interface DominioDTO {
   rvHighValue?: string;
   rvAbbreviation?: string;
   rvMeaning?: string;
+  // Aliases for dropdown compatibility
+  codigo?: string;
+  descripcion?: string;
 }
 
 export interface DescriptorDTO {
@@ -336,6 +349,13 @@ export interface InformacionUsuarioDTO {
   usuTipoDocumento?: string;
   codigoCampo?: number;
   valor?: string;
+}
+
+// === Risk Search Fields (LOV12) ===
+export interface CampoBusquedaDTO {
+  codigoCampo?: number;
+  nombreCampo?: string;
+  riesgoCodigo?: string;
 }
 
 // === Paginated Response ===

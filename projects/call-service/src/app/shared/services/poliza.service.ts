@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, RiesgoBusquedaResponse, RiesgoAseguradoDTO, PolizaValidacionDTO } from '../interfaces';
+import { ApiResponse, RiesgoBusquedaResponse, RiesgoAseguradoDTO, PolizaValidacionDTO, CampoBusquedaDTO } from '../interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class PolizaService {
@@ -22,5 +22,12 @@ export class PolizaService {
 
   validatePolicy(contrato: string): Observable<ApiResponse<PolizaValidacionDTO>> {
     return this.http.get<ApiResponse<PolizaValidacionDTO>>(`${this.baseUrl}/polizas/${contrato}/validar`);
+  }
+
+  getCamposBusqueda(ramo?: string, producto?: string): Observable<ApiResponse<CampoBusquedaDTO[]>> {
+    let params: any = {};
+    if (ramo) { params.ramo = ramo; }
+    if (producto) { params.producto = producto; }
+    return this.http.get<ApiResponse<CampoBusquedaDTO[]>>(`${this.baseUrl}/riesgos/campos-busqueda`, { params });
   }
 }

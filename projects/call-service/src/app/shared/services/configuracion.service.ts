@@ -26,8 +26,16 @@ export class ConfiguracionService {
     return this.http.get<ApiResponse<VariableGlobalDTO[]>>(`${this.baseUrl}/variables-globales`);
   }
 
-  getTiposDocumento(): Observable<ApiResponse<DominioDTO[]>> {
+  lovTiposDocumento(): Observable<ApiResponse<DominioDTO[]>> {
     return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/dominios/lov/tipos-documento`);
+  }
+
+  lovLineasNegocio(): Observable<ApiResponse<DominioDTO[]>> {
+    return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/dominios/lov/lineas-negocio`);
+  }
+
+  lovSeveridadEvento(): Observable<ApiResponse<DominioDTO[]>> {
+    return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/dominios/lov/severidad-evento`);
   }
 
   evaluatePicoPlaca(placa: string, locgeCodigo: number): Observable<ApiResponse<string>> {

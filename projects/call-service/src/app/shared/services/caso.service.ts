@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, LlamadaDTO, CasoRequest, Page } from '../interfaces';
+import { ApiResponse, LlamadaDTO, CasoRequest, DominioDTO, Page } from '../interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class CasoService {
@@ -33,15 +33,34 @@ export class CasoService {
   }
 
   validateDuplicate(locgeCodigo: number, contNumero: string, riesgoCodigo: string): Observable<ApiResponse<boolean>> {
-    const params = new HttpParams().set('locgeCodigo', locgeCodigo).set('contNumero', contNumero).set('riesgoCodigo', riesgoCodigo);
+    const params = new HttpParams()
+      .set('locgeCodigo', locgeCodigo)
+      .set('contNumero', contNumero)
+      .set('riesgoCodigo', riesgoCodigo);
     return this.http.get<ApiResponse<boolean>>(`${this.baseUrl}/validar-duplicado`, { params });
   }
 
   lovContratos(query: string, page = 0): Observable<ApiResponse<Page<LlamadaDTO>>> {
-    return this.http.get<ApiResponse<Page<LlamadaDTO>>>(`${this.baseUrl}/lov/contratos`, { params: { query, page, size: 20 } });
+    return this.http.get<ApiResponse<Page<LlamadaDTO>>>(`${this.baseUrl}/lov/contratos`,
+      { params: { query, page, size: 20 } });
   }
 
   lovUsuarios(query: string, page = 0): Observable<ApiResponse<Page<LlamadaDTO>>> {
-    return this.http.get<ApiResponse<Page<LlamadaDTO>>>(`${this.baseUrl}/lov/usuarios`, { params: { query, page, size: 20 } });
+    return this.http.get<ApiResponse<Page<LlamadaDTO>>>(`${this.baseUrl}/lov/usuarios`,
+      { params: { query, page, size: 20 } });
+  }
+
+  lovCausas(ramo: number, producto: number): Observable<ApiResponse<DominioDTO[]>> {
+    return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/lov/causas`,
+      { params: { ramo, producto } });
+  }
+
+  lovRamos(): Observable<ApiResponse<DominioDTO[]>> {
+    return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/lov/ramos`);
+  }
+
+  lovProductos(ramo: number): Observable<ApiResponse<DominioDTO[]>> {
+    return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/lov/productos`,
+      { params: { ramo } });
   }
 }

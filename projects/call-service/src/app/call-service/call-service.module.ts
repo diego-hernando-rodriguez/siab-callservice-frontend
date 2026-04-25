@@ -20,6 +20,7 @@ import { RatingModule } from 'primeng/rating';
 import { MessageModule } from 'primeng/message';
 import { MessagesModule } from 'primeng/messages';
 import { TooltipModule } from 'primeng/tooltip';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 // Containers
 import { CallServiceContainerComponent } from './containers/call-service-container/call-service-container.component';
@@ -66,7 +67,7 @@ const PRIMENG_MODULES = [
   TabViewModule, ButtonModule, ToolbarModule, InputTextModule,
   DropdownModule, InputTextareaModule, TableModule, DialogModule,
   ToastModule, ConfirmDialogModule, CalendarModule, RatingModule,
-  MessageModule, MessagesModule, TooltipModule
+  MessageModule, MessagesModule, TooltipModule, AutoCompleteModule
 ];
 
 @NgModule({

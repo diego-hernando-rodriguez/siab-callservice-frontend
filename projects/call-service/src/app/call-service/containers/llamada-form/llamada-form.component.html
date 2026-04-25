@@ -1,125 +1,350 @@
 <div class="llamada-form" [formGroup]="llamadaForm" role="form" aria-label="Formulario de registro de llamada">
-  <div class="grid">
-    <!-- Step 1: City Selection -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <label for="locgeCodigo" id="lbl-ciudad" aria-label="Ciudad">Ciudad *</label>
-      <p-dropdown [options]="ciudades" formControlName="locgeCodigo"
-        optionLabel="nombre" optionValue="locgeCodigo"
-        [filter]="true" filterBy="nombre" [showClear]="true"
-        placeholder="Seleccione una ciudad" [tabindex]="1"
-        aria-labelledby="lbl-ciudad"
-        (onChange)="onCitySelected($event.value)">
-      </p-dropdown>
-    </div>
 
-    <!-- Step 2: Risk Type -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <label for="riesgoCodigo" id="lbl-riesgo">Riesgo *</label>
-      <div class="p-inputgroup">
-        <input pInputText formControlName="riesgoCodigo" [tabindex]="2" aria-labelledby="lbl-riesgo" placeholder="Placa / Cédula">
-        <button pButton icon="pi pi-search" (click)="onRiskSearch()" [tabindex]="3" aria-label="Buscar riesgo"></button>
-      </div>
-    </div>
-
-    <!-- Step 3: Contract/Policy -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <label for="contNumeroContrato" id="lbl-contrato">Contrato</label>
-      <input pInputText formControlName="contNumeroContrato" [tabindex]="4" aria-labelledby="lbl-contrato" [readOnly]="true">
-    </div>
-
-    <!-- Ramo/Producto (auto-populated) -->
-    <div class="col-12 md:col-3">
-      <label id="lbl-ramo">Ramo</label>
-      <input pInputText formControlName="ramoCodigo" [tabindex]="5" aria-labelledby="lbl-ramo" [readOnly]="true">
-    </div>
-    <div class="col-12 md:col-3">
-      <label id="lbl-producto">Producto</label>
-      <input pInputText formControlName="productoCodigo" [tabindex]="6" aria-labelledby="lbl-producto" [readOnly]="true">
-    </div>
-
-    <!-- Step 4: Cause Selection -->
-    <div class="col-12 md:col-6">
-      <label for="causaCodigo" id="lbl-causa">Causa *</label>
-      <p-dropdown [options]="causas" formControlName="causaCodigo"
-        optionLabel="descripcion" optionValue="causaCodigo"
-        [filter]="true" [showClear]="true"
-        placeholder="Seleccione una causa" [tabindex]="7"
-        aria-labelledby="lbl-causa">
-      </p-dropdown>
-    </div>
-
-    <!-- User Document -->
-    <div class="col-12 md:col-4">
-      <label for="usuNumeroDocumento" id="lbl-doc">Documento Usuario *</label>
-      <input pInputText formControlName="usuNumeroDocumento" [tabindex]="8" aria-labelledby="lbl-doc">
+  <!-- FILA 1: Barra de estado del caso -->
+  <div class="grid mb-2 surface-100 border-round p-2">
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Nro. Caso</label>
+      <input pInputText formControlName="numero" [tabindex]="-1" readonly class="w-full font-bold text-primary" />
     </div>
     <div class="col-12 md:col-2">
-      <label for="usuTipoDocumento" id="lbl-tipo-doc">Tipo Doc</label>
-      <input pInputText formControlName="usuTipoDocumento" [tabindex]="9" aria-labelledby="lbl-tipo-doc">
+      <label class="font-bold text-sm">Nro. Siniestro</label>
+      <input pInputText formControlName="numeroSiniestro" [tabindex]="-1" readonly class="w-full" />
     </div>
-
-    <!-- Step 5: Address -->
-    <div class="col-12 md:col-8">
-      <label for="direccion" id="lbl-dir">Dirección *</label>
-      <div class="p-inputgroup">
-        <input pInputText formControlName="direccion" [tabindex]="10" aria-labelledby="lbl-dir">
-        <button pButton icon="pi pi-map-marker" (click)="onGeocode()" [tabindex]="11" aria-label="Georreferenciación"></button>
-        <button pButton icon="pi pi-globe" (click)="onGoogleDirection()" [tabindex]="12" aria-label="Buscar en Google Maps"></button>
-      </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Fecha</label>
+      <input pInputText formControlName="fechaLlamada" [tabindex]="-1" readonly class="w-full" />
     </div>
-
-    <!-- Complementary address fields -->
-    <div class="col-12 md:col-4">
-      <label for="direccionComplemento" id="lbl-comp">Dirección Complemento</label>
-      <input pInputText formControlName="direccionComplemento" [tabindex]="13" aria-labelledby="lbl-comp">
+    <div class="col-12 md:col-1">
+      <label class="font-bold text-sm">Hora</label>
+      <input pInputText formControlName="horaLlamada" [tabindex]="-1" readonly class="w-full" />
     </div>
-    <div class="col-12 md:col-4">
-      <label for="direccionDestino" id="lbl-dest">Dirección Destino</label>
-      <input pInputText formControlName="direccionDestino" [tabindex]="14" aria-labelledby="lbl-dest">
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Estado</label>
+      <input pInputText formControlName="dspEstadoLlamada" [tabindex]="-1" readonly class="w-full"
+        [ngClass]="{'text-green-600': llamadaForm.get('estadoLlamada')?.value === 'PR', 'text-orange-600': llamadaForm.get('estadoLlamada')?.value === 'AB'}" />
     </div>
-    <div class="col-12 md:col-4">
-      <label for="direccionGeoReferencia" id="lbl-geo">Dirección Geo Referencia</label>
-      <input pInputText formControlName="direccionGeoReferencia" [tabindex]="15" aria-labelledby="lbl-geo" [readOnly]="true">
-    </div>
-
-    <!-- Phone -->
     <div class="col-12 md:col-3">
-      <label for="telefonoLlamada" id="lbl-tel">Teléfono</label>
-      <input pInputText formControlName="telefonoLlamada" [tabindex]="16" aria-labelledby="lbl-tel">
-    </div>
-
-    <!-- Step 6: Observations -->
-    <div class="col-12">
-      <label for="observacionesLar" id="lbl-obs">Observaciones</label>
-      <textarea pInputTextarea formControlName="observacionesLar" [rows]="4" [tabindex]="17"
-        aria-labelledby="lbl-obs" class="w-full"></textarea>
+      <label class="font-bold text-sm">Estado Servicio</label>
+      <input pInputText formControlName="dspEstadoServ" [tabindex]="-1" readonly class="w-full text-sm" />
     </div>
   </div>
 
-  <!-- Risk Search Dialog -->
-  <app-riesgo-search
-    *ngIf="showRiesgoSearch"
-    [(visible)]="showRiesgoSearch"
-    (riesgoSelected)="onRiskSelected($event)">
-  </app-riesgo-search>
+  <!-- FILA 2: Ciudad, País, Riesgo -->
+  <div class="grid">
+    <div class="col-12 md:col-4">
+      <label for="locgeCodigo" class="font-bold text-sm">Ciudad *</label>
+      <p-autoComplete
+        [(ngModel)]="selectedCity"
+        [ngModelOptions]="{standalone: true}"
+        [suggestions]="ciudades"
+        (completeMethod)="onCitySearch($event)"
+        (onSelect)="onCityAutoSelected($event.value)"
+        field="nombre"
+        [dropdown]="true"
+        [minLength]="2"
+        placeholder="Escriba el nombre de la ciudad"
+        [tabindex]="1"
+        [forceSelection]="true"
+        class="w-full">
+        <ng-template let-city pTemplate="item">
+          <div class="flex justify-content-between w-full">
+            <span>{{city.nombre}}</span>
+            <span class="text-sm text-500">{{city.departamento}}</span>
+          </div>
+        </ng-template>
+      </p-autoComplete>
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Departamento</label>
+      <input pInputText formControlName="dspDpto" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">País</label>
+      <p-dropdown [options]="paises" formControlName="pais"
+        optionLabel="nombre" optionValue="locgeCodigo"
+        [tabindex]="2" class="w-full"
+        (onChange)="onPaisChanged()">
+      </p-dropdown>
+    </div>
+    <div class="col-12 md:col-4">
+      <label class="font-bold text-sm">Identificar Riesgo por:</label>
+      <div class="flex flex-column gap-2">
+        <p-dropdown [options]="camposBusqueda" [(ngModel)]="selectedCampoBusqueda"
+          [ngModelOptions]="{standalone: true}"
+          optionLabel="nombreCampo"
+          placeholder="Seleccione campo"
+          [tabindex]="3"
+          [disabled]="camposBusqueda.length === 0"
+          class="w-full">
+        </p-dropdown>
+        <div class="p-inputgroup">
+          <input pInputText [(ngModel)]="riesgoQuery" [ngModelOptions]="{standalone: true}"
+            [tabindex]="4"
+            [placeholder]="selectedCampoBusqueda ? 'Ingrese ' + selectedCampoBusqueda.nombreCampo : 'Seleccione campo primero'"
+            [disabled]="!selectedCampoBusqueda"
+            (keydown.enter)="onRiskSearch()" />
+          <button pButton icon="pi pi-search" (click)="onRiskSearch()" [tabindex]="5"
+            pTooltip="Buscar riesgo" aria-label="Buscar riesgo"
+            [disabled]="!selectedCampoBusqueda || !riesgoQuery"></button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- Duplicate Case Alert -->
-  <app-duplicate-case-alert
-    *ngIf="showDuplicateAlert"
-    [message]="duplicateMessage"
-    [(visible)]="showDuplicateAlert">
-  </app-duplicate-case-alert>
+  <!-- FILA 3: Contrato, Ramo, Producto, Causa -->
+  <div class="grid">
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Contrato / Póliza</label>
+      <div class="p-inputgroup">
+        <input pInputText formControlName="contNumeroContrato" [tabindex]="5" readonly />
+        <button pButton icon="pi pi-search" (click)="onPolizaSearch()" [tabindex]="6"
+          pTooltip="Buscar póliza" aria-label="Buscar póliza"></button>
+      </div>
+    </div>
+    <div class="col-12 md:col-1">
+      <label class="font-bold text-sm">Ramo</label>
+      <input pInputText formControlName="ramoCodigo" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Desc. Ramo</label>
+      <input pInputText formControlName="dspRamo" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-1">
+      <label class="font-bold text-sm">Producto</label>
+      <input pInputText formControlName="productoCodigo" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Desc. Producto</label>
+      <input pInputText formControlName="dspProducto" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Causa *</label>
+      <div class="p-inputgroup">
+        <p-dropdown [options]="causas" formControlName="causaCodigo"
+          optionLabel="descripcion" optionValue="codigo"
+          [filter]="true" [showClear]="true"
+          placeholder="Seleccione causa" [tabindex]="7" class="w-full">
+        </p-dropdown>
+      </div>
+    </div>
+  </div>
 
-  <!-- Pico y Placa Alert -->
-  <app-pico-placa-alert
-    *ngIf="showPicoPlacaAlert"
-    [message]="picoPlacaMessage"
-    [(visible)]="showPicoPlacaAlert">
-  </app-pico-placa-alert>
+  <!-- FILA 4: Vigencia, Placa Riesgo, Indicadores -->
+  <div class="grid">
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Vigencia Desde</label>
+      <input pInputText formControlName="fechaInicioVig" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Vigencia Hasta</label>
+      <input pInputText formControlName="fechaFinVig" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Placa Riesgo</label>
+      <input pInputText formControlName="placaRiesgo" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Tipo Asistencia</label>
+      <input pInputText formControlName="dspTipoAsistencia" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Opción Cobertura</label>
+      <input pInputText formControlName="dspOpcionCobertura" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Cobertura Vehículo</label>
+      <input pInputText formControlName="dspCoberturaVehiculo" [tabindex]="-1" readonly class="w-full" />
+    </div>
+  </div>
 
-  <!-- Google Direction Dialog -->
-  <app-google-direction-dialog
-    *ngIf="showGoogleDirection"
-    [(visible)]="showGoogleDirection">
-  </app-google-direction-dialog>
+  <!-- FILA 5: Usuario, Tomador, Indicadores especiales -->
+  <div class="grid">
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Tipo Doc. Usuario</label>
+      <p-dropdown [options]="tiposDocumento" formControlName="usuTipoDocumento"
+        optionLabel="rvMeaning" optionValue="rvLowValue"
+        [tabindex]="8" class="w-full">
+      </p-dropdown>
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Nro. Doc. Usuario *</label>
+      <div class="p-inputgroup">
+        <input pInputText formControlName="usuNumeroDocumento" [tabindex]="9" />
+        <button pButton icon="pi pi-search" (click)="onUserSearch()" [tabindex]="10"
+          pTooltip="Buscar usuario" aria-label="Buscar usuario"></button>
+      </div>
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Nombre Usuario</label>
+      <input pInputText formControlName="dspNombre" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Tomador</label>
+      <input pInputText formControlName="dspTomador" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-1">
+      <label class="font-bold text-sm">Preferencial</label>
+      <input pInputText formControlName="preferencial" [tabindex]="-1" readonly class="w-full text-center"
+        [ngClass]="{'bg-yellow-100 text-yellow-800 font-bold': llamadaForm.get('preferencial')?.value === 'S'}" />
+    </div>
+  </div>
+
+  <!-- FILA 6: Indicadores de estado -->
+  <div class="grid" *ngIf="llamadaForm.get('numero')?.value">
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Funcionario Bolívar</label>
+      <input pInputText formControlName="dspFuncionarioBolivar" [tabindex]="-1" readonly class="w-full text-center"
+        [ngClass]="{'bg-red-100 text-red-800 font-bold': llamadaForm.get('dspFuncionarioBolivar')?.value === 'SI'}" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Me choqué hace días</label>
+      <input pInputText formControlName="dspMechoqueHacedias" [tabindex]="-1" readonly class="w-full text-center" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Alto Valor</label>
+      <input pInputText formControlName="altoValor" [tabindex]="-1" readonly class="w-full text-center"
+        [ngClass]="{'bg-purple-100 text-purple-800 font-bold': llamadaForm.get('altoValor')?.value === 'S'}" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Acuerdo Cliente</label>
+      <input pInputText formControlName="acuerdoCliente" [tabindex]="-1" readonly class="w-full text-center" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Origen</label>
+      <input pInputText formControlName="origen" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Envío Click/SF</label>
+      <input pInputText formControlName="dspEnviadoCasoClick" [tabindex]="-1" readonly class="w-full text-center" />
+    </div>
+  </div>
+
+  <!-- FILA 7: Dirección -->
+  <div class="grid">
+    <div class="col-12 md:col-6">
+      <label class="font-bold text-sm">Dirección *</label>
+      <div class="p-inputgroup">
+        <input pInputText formControlName="direccion" [tabindex]="11" />
+        <button pButton icon="pi pi-map-marker" (click)="onGeocode()" [tabindex]="12"
+          pTooltip="Georreferenciar" aria-label="Georreferenciar dirección"></button>
+        <button pButton icon="pi pi-globe" (click)="onGoogleDirection()" [tabindex]="13"
+          pTooltip="Buscar en Google Maps" severity="info" aria-label="Buscar en Google Maps"></button>
+      </div>
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Complemento</label>
+      <input pInputText formControlName="direccionComplemento" [tabindex]="14" class="w-full" />
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Geo Referencia</label>
+      <input pInputText formControlName="direccionGeoReferencia" [tabindex]="-1" readonly class="w-full" />
+    </div>
+  </div>
+
+  <!-- FILA 8: Dirección destino, Teléfono -->
+  <div class="grid">
+    <div class="col-12 md:col-6">
+      <label class="font-bold text-sm">Dirección Destino</label>
+      <input pInputText formControlName="direccionDestino" [tabindex]="15" class="w-full" />
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Teléfono</label>
+      <input pInputText formControlName="telefonoLlamada" [tabindex]="16" class="w-full" />
+    </div>
+    <div class="col-12 md:col-3">
+      <label class="font-bold text-sm">Severidad / Línea Negocio</label>
+      <div class="flex gap-2">
+        <p-dropdown [options]="severidades" formControlName="severidad"
+          optionLabel="rvMeaning" optionValue="rvLowValue"
+          placeholder="Severidad" [tabindex]="17" class="w-6">
+        </p-dropdown>
+        <p-dropdown [options]="lineasNegocio" formControlName="lineaNegocio"
+          optionLabel="rvMeaning" optionValue="rvLowValue"
+          placeholder="Línea" [tabindex]="18" class="w-6">
+        </p-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA 9: Observaciones -->
+  <div class="grid">
+    <div class="col-12">
+      <label class="font-bold text-sm">Observaciones</label>
+      <textarea pInputTextarea formControlName="observacionesLar" [rows]="3" [tabindex]="19"
+        class="w-full"></textarea>
+    </div>
+  </div>
+
+  <!-- FILA 10: Botones de acción del caso -->
+  <div class="grid mt-2">
+    <div class="col-12">
+      <div class="flex flex-wrap gap-2">
+        <p-button label="Póliza" icon="pi pi-file" (onClick)="onPolizaSearch()" [tabindex]="20"
+          severity="secondary" [outlined]="true" size="small"></p-button>
+        <p-button label="Cartas" icon="pi pi-envelope" (onClick)="onCartas()" [tabindex]="21"
+          severity="secondary" [outlined]="true" size="small"
+          [badge]="llamadaForm.get('controlCarta')?.value === 'S' ? '!' : ''" badgeSeverity="danger"></p-button>
+        <p-button label="Correo" icon="pi pi-send" (onClick)="onCorreo()" [tabindex]="22"
+          severity="secondary" [outlined]="true" size="small"></p-button>
+        <p-button label="Compromisos" icon="pi pi-check-square" (onClick)="onCompromisos()" [tabindex]="23"
+          severity="secondary" [outlined]="true" size="small"></p-button>
+        <p-button label="Reclasificar" icon="pi pi-refresh" (onClick)="onReclasificar()" [tabindex]="24"
+          severity="warning" [outlined]="true" size="small"
+          [disabled]="!llamadaForm.get('numero')?.value"></p-button>
+        <p-button label="Caso Estrella" icon="pi pi-star" (onClick)="onCasoEstrella()" [tabindex]="25"
+          severity="secondary" [outlined]="true" size="small"></p-button>
+        <p-button label="Informes" icon="pi pi-file-pdf" (onClick)="onInformes()" [tabindex]="26"
+          severity="secondary" [outlined]="true" size="small"></p-button>
+        <p-button label="Acuerdos" icon="pi pi-handshake" (onClick)="onAcuerdos()" [tabindex]="27"
+          severity="secondary" [outlined]="true" size="small"></p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialogs -->
+
+  <!-- Risk Search Results Dialog -->
+  <p-dialog header="Resultados de Búsqueda de Riesgo" [(visible)]="showRiesgoSearch" [modal]="true"
+    [style]="{width: '70vw'}" [closable]="true">
+    <p-table [value]="riesgoResults" [paginator]="true" [rows]="10" selectionMode="single"
+      (onRowSelect)="onRiskResultSelected($event)">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Valor</th>
+          <th>Contrato</th>
+          <th>Ramo</th>
+          <th>Producto</th>
+          <th>Código Campo</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr [pSelectableRow]="r">
+          <td>{{r.valor}}</td>
+          <td>{{r.contNumero}}</td>
+          <td>{{r.ramoCodigo}}</td>
+          <td>{{r.productoCodigo}}</td>
+          <td>{{r.codigoCampo}}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="text-center p-4">No se encontraron riesgos con ese valor</td></tr>
+      </ng-template>
+    </p-table>
+  </p-dialog>
+
+  <app-duplicate-case-alert *ngIf="showDuplicateAlert" [message]="duplicateMessage"
+    [(visible)]="showDuplicateAlert"></app-duplicate-case-alert>
+
+  <app-pico-placa-alert *ngIf="showPicoPlacaAlert" [message]="picoPlacaMessage"
+    [(visible)]="showPicoPlacaAlert"></app-pico-placa-alert>
+
+  <app-google-direction-dialog *ngIf="showGoogleDirection"
+    [(visible)]="showGoogleDirection"></app-google-direction-dialog>
+
+  <app-result-cartas-dialog *ngIf="showCartasDialog" [(visible)]="showCartasDialog"
+    [llamadaNumero]="llamadaForm.get('numero')?.value"></app-result-cartas-dialog>
+
+  <app-acuerdos-clientes-dialog *ngIf="showAcuerdosDialog" [(visible)]="showAcuerdosDialog"
+    [llamadaNumero]="llamadaForm.get('numero')?.value"></app-acuerdos-clientes-dialog>
+
 </div>
