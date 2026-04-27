@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CalificacionProveedorDTO } from '../../../shared/interfaces';
+import { CalificacionRequestDTO } from '../../../shared/interfaces';
 import { ProveedorService } from '../../../shared/services/proveedor.service';
 
 @Component({
@@ -9,8 +9,8 @@ import { ProveedorService } from '../../../shared/services/proveedor.service';
       <div class="grid">
         <div class="col-6"><label>General</label><p-rating [(ngModel)]="calificacion.calificacionGeneral" [stars]="5"></p-rating></div>
         <div class="col-6"><label>Amabilidad</label><p-rating [(ngModel)]="calificacion.amabilidad" [stars]="5"></p-rating></div>
-        <div class="col-6"><label>Tiempo</label><p-rating [(ngModel)]="calificacion.calificacionTiempo" [stars]="5"></p-rating></div>
-        <div class="col-6"><label>Servicio</label><p-rating [(ngModel)]="calificacion.calificacionServicio" [stars]="5"></p-rating></div>
+        <div class="col-6"><label>Tiempo</label><p-rating [(ngModel)]="calificacion.tiempo" [stars]="5"></p-rating></div>
+        <div class="col-6"><label>Servicio</label><p-rating [(ngModel)]="calificacion.servicio" [stars]="5"></p-rating></div>
         <div class="col-12"><label>Observaciones</label>
           <textarea pInputTextarea [(ngModel)]="calificacion.observaciones" [rows]="3" class="w-full"></textarea>
         </div>
@@ -20,13 +20,13 @@ import { ProveedorService } from '../../../shared/services/proveedor.service';
   `
 })
 export class CalificacionProveedorComponent {
-  @Input() calificacion: CalificacionProveedorDTO = {};
+  @Input() calificacion: CalificacionRequestDTO = {};
 
   constructor(private proveedorService: ProveedorService) {}
 
   onRate(): void {
     if (this.calificacion.consecutivoPunto) {
-      this.proveedorService.rateProvider(this.calificacion.consecutivoPunto, this.calificacion).subscribe();
+      this.proveedorService.calificarProveedor(this.calificacion.consecutivoPunto, this.calificacion).subscribe();
     }
   }
 }

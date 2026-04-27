@@ -20,7 +20,7 @@ export class ServicioListComponent implements OnInit {
 
   loadServices(llamadaNumero: number): void {
     this.llamadaNumero = llamadaNumero;
-    this.servicioService.listServices(llamadaNumero).subscribe(res => {
+    this.servicioService.getServicios(llamadaNumero).subscribe((res: any) => {
       this.servicios = res.data || [];
     });
   }
@@ -31,7 +31,7 @@ export class ServicioListComponent implements OnInit {
 
   onCancelService(servicio: ServicioPrestadoDTO): void {
     if (servicio.numeroAutorizacion) {
-      this.servicioService.cancelService(servicio.numeroAutorizacion, 'Anulado por operador').subscribe(() => {
+      this.servicioService.cancelServicio(servicio.numeroAutorizacion, 'Anulado por operador').subscribe(() => {
         if (this.llamadaNumero) this.loadServices(this.llamadaNumero);
       });
     }
