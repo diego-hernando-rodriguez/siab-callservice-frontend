@@ -32,15 +32,32 @@ export class PolizaService {
     return this.http.get<ApiResponse<ProductoConsultaDTO[]>>(`${this.baseUrl}/polizas/lov/productos`, { params });
   }
 
-  getRiesgosCedula(ramo2: string, producto2: string, valor: string, pais: number, ramo?: string, producto?: string): Observable<ApiResponse<ContratoDTO[]>> {
+  getRiesgosCedula(ramo2: string, producto2: string, valor: string, pais: number, ramo?: string, producto?: string, existente?: string): Observable<ApiResponse<ContratoDTO[]>> {
     let params = new HttpParams().set('ramo2', ramo2).set('producto2', producto2).set('valor', valor).set('pais', pais);
     if (ramo) params = params.set('ramo', ramo);
     if (producto) params = params.set('producto', producto);
+    if (existente) params = params.set('existente', existente);
     return this.http.get<ApiResponse<ContratoDTO[]>>(`${this.baseUrl}/riesgos/lov/contratos`, { params });
+  }
+
+  getContratoComodin(ramo: string, producto: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.baseUrl}/riesgos/contrato-comodin`, { params: { ramo, producto } });
   }
 
   getDatosContrato(contNumeroContrato: string): Observable<ApiResponse<DatosContratoDTO>> {
     return this.http.get<ApiResponse<DatosContratoDTO>>(`${this.baseUrl}/riesgos/datos-contrato`, { params: { contNumeroContrato } });
+  }
+
+  getRiesgosCargue(ramoCodigo: string, productoCodigo: string, riesgoCodigo: string,
+                   tipcontCodigo: number, contNumeroContrato: string, contFechaInicioVigencia: string,
+                   pecoNumeroOrden: number): Observable<ApiResponse<{tipoAsistencia: string, opcionCobertura: string}>> {
+    const params = new HttpParams()
+      .set('ramoCodigo', ramoCodigo).set('productoCodigo', productoCodigo)
+      .set('riesgoCodigo', riesgoCodigo).set('tipcontCodigo', tipcontCodigo)
+      .set('contNumeroContrato', contNumeroContrato)
+      .set('contFechaInicioVigencia', contFechaInicioVigencia)
+      .set('pecoNumeroOrden', pecoNumeroOrden);
+    return this.http.get<ApiResponse<{tipoAsistencia: string, opcionCobertura: string}>>(`${this.baseUrl}/riesgos/cargue`, { params });
   }
 
   searchRisks(valor: string): Observable<ApiResponse<RiesgoBusquedaResponse>> {

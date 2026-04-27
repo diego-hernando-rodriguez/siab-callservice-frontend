@@ -142,7 +142,8 @@ export class LlamadaFormComponent implements OnInit {
     this.llamadaForm.patchValue({
       locgeCodigo: city.locgeCodigo,
       dspDpto: city.departamento || '',
-      tlgCodigo: city.tlgCodigo || 3
+      tlgCodigo: city.tlgCodigo || 3,
+      pais: city.pais ? Number(city.pais) : this.llamadaForm.getRawValue().pais
     });
     this.loadCausas();
   }
@@ -241,13 +242,49 @@ export class LlamadaFormComponent implements OnInit {
     this.showProductosDialog = false;
     const ramo2 = producto.COD_RAMO || producto.cod_ramo;
     const producto2 = producto.COD_PRODUCTO || producto.cod_producto;
+    const existente = producto.EXISTE || producto.existe || 'S';
+    const inexistente = producto.INEXISTENTE || producto.inexistente;
+
+    // If inexistente (EXISTE='N'), get wildcard ASIS contract
+    if (existente === 'N' || inexistente) {
+      this.polizaService.getContratoComodin(ramo2, producto2).subscribe(res => {
+        const comodin = res.data;
+        if (comodin && comodin.POLIZA) {
+          this.llamadaForm.patchValue({
+            contNumeroContrato: comodin.POLIZA,
+            ramoCodigo: parseInt(ramo2),
+            productoCodigo: parseInt(producto2),
+            riesgoCodigo: comodin.RIESGO || '1001',
+            dspRiesgoValor: this.riesgoQuery,
+            codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
+            placaRiesgo: this.riesgoQuery,
+            usuTipoDocumento: comodin.TIPO_DOCUMENTO || 'CC',
+            usuNumeroDocumento: comodin.NUMERO_DOCUMENTO || '',
+            dspNombre: comodin.NOMBRES_APELLIDOS || inexistente || 'CLIENTE INEXISTENTE'
+          });
+        } else {
+          this.llamadaForm.patchValue({
+            ramoCodigo: parseInt(ramo2),
+            productoCodigo: parseInt(producto2),
+            dspRiesgoValor: this.riesgoQuery,
+            codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
+            dspNombre: inexistente || 'CLIENTE INEXISTENTE'
+          });
+        }
+        this.loadDescriptores(parseInt(ramo2), parseInt(producto2));
+        this.loadCausas();
+        this.loadCamposBusqueda();
+      });
+      return;
+    }
 
     // Step 2: Call P_RIESGOS_CEDULA to get contracts
     const raw = this.llamadaForm.getRawValue();
     this.polizaService.getRiesgosCedula(
       ramo2, producto2, this.riesgoQuery, raw.pais || 1,
       raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
-      raw.productoCodigo ? String(raw.productoCodigo) : undefined
+      raw.productoCodigo ? String(raw.productoCodigo) : undefined,
+      existente
     ).subscribe(res => {
       this.contratosResults = res.data || [];
       if (this.contratosResults.length === 1) {
@@ -278,6 +315,8 @@ export class LlamadaFormComponent implements OnInit {
     const numOrden = contrato.NUM_ORDEN || contrato.num_orden;
     const tipContrato = contrato.TIP_CONTRATO || contrato.tip_contrato;
     const valor = contrato.VALOR_RIESGO_ORI || contrato.valor_riesgo_ori || this.riesgoQuery;
+    const inicio = contrato.INICIO || contrato.inicio || '';
+    const fin = contrato.FIN || contrato.fin || '';
 
     this.llamadaForm.patchValue({
       contNumeroContrato: poliza,
@@ -286,7 +325,9 @@ export class LlamadaFormComponent implements OnInit {
       riesgoCodigo: riesgo,
       dspRiesgoValor: valor,
       codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
-      placaRiesgo: valor
+      placaRiesgo: valor,
+      fechaInicioVig: this.formatFecha(inicio),
+      fechaFinVig: this.formatFecha(fin)
     });
 
     // Fill user data from contract
@@ -306,14 +347,21 @@ export class LlamadaFormComponent implements OnInit {
     }
 
     // Step 4: f_riesgos_cargue for tipo_asistencia and opcion_cobertura
-    this.polizaService.searchRisks(valor).subscribe(res => {
-      if (res.data) {
-        this.llamadaForm.patchValue({
-          dspTipoAsistencia: res.data.tipoAsistencia || '',
-          dspOpcionCobertura: res.data.opcionCobertura || ''
-        });
-      }
-    });
+    const fechaInicioContrato = contrato.INICIO || contrato.inicio || '';
+    const tipContratoNum = tipContrato ? parseInt(tipContrato) : 1;
+    const numOrdenNum = numOrden ? parseInt(numOrden) : 1;
+    if (poliza && riesgo && fechaInicioContrato) {
+      this.polizaService.getRiesgosCargue(
+        ramo, producto, riesgo, tipContratoNum, poliza, fechaInicioContrato, numOrdenNum
+      ).subscribe(res => {
+        if (res.data) {
+          this.llamadaForm.patchValue({
+            dspTipoAsistencia: res.data.tipoAsistencia || '',
+            dspOpcionCobertura: res.data.opcionCobertura || ''
+          });
+        }
+      });
+    }
 
     this.loadDescriptores(parseInt(ramo), parseInt(producto));
     this.loadCausas();
@@ -608,8 +656,14 @@ export class LlamadaFormComponent implements OnInit {
       direccionGeoReferencia: caso.direccionGeoReferencia || '',
       direccionDestino: caso.direccionDestino || '', telefonoLlamada: caso.telefonoLlamada || '',
       severidad: caso.severidad || '', lineaNegocio: caso.lineaNegocio || '',
-      observacionesLar: caso.observacionesLar || '', codigoCampo: caso.codigoCampo
+      observacionesLar: caso.observacionesLar || '', codigoCampo: caso.codigoCampo,
+      dspDpto: caso.dspDpto || '', tlgCodigo: caso.tlgCodigo || 3,
+      placaRiesgo: caso.placaRiesgo || ''
     });
+    this.riesgoQuery = caso.placaRiesgo || '';
+    if (caso.dspCiudad && caso.locgeCodigo) {
+      this.selectedCity = { locgeCodigo: caso.locgeCodigo, nombre: caso.dspCiudad, departamento: caso.dspDpto || '', tlgCodigo: caso.tlgCodigo || 3 } as LocalizacionDTO;
+    }
     if (caso.ramoCodigo && caso.productoCodigo) { this.loadCamposBusqueda(); }
   }
 
@@ -624,6 +678,16 @@ export class LlamadaFormComponent implements OnInit {
   onCasoEstrella(): void { }
   onInformes(): void { }
   onAcuerdos(): void { this.showAcuerdosDialog = true; }
+
+  private formatFecha(value: string): string {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
 
   clearForm(): void {
     this.llamadaForm.reset();

@@ -119,8 +119,7 @@
     </div>
     <div class="col-12 md:col-3">
       <label class="font-bold text-sm">Causa *</label>
-      <div class="p-inputgroup">
-        <p-dropdown [options]="causas" formControlName="causaCodigo"
+      <p-dropdown [options]="causas" formControlName="causaCodigo"
           optionLabel="displayLabel" optionValue="codigo"
           [filter]="true" filterBy="displayLabel" [showClear]="true"
           placeholder="Seleccione causa" [tabindex]="7" class="w-full"
@@ -135,7 +134,6 @@
             <span *ngIf="item">{{item.codigo}} - {{item.descripcion}}</span>
           </ng-template>
         </p-dropdown>
-      </div>
     </div>
     <div class="col-12 md:col-3" *ngIf="llamadaForm.get('dspDescripcion2')?.value">
       <label class="font-bold text-sm">Desc. Causa</label>
@@ -232,8 +230,6 @@
         <button pButton icon="pi pi-map-marker" (click)="onGeocode()" [tabindex]="12"
           pTooltip="Georreferenciar" aria-label="Georreferenciar dirección"
           [loading]="geocodingInProgress"></button>
-        <button pButton icon="pi pi-globe" (click)="onGoogleDirection()" [tabindex]="13"
-          pTooltip="Buscar en Google Maps" severity="info" aria-label="Buscar en Google Maps"></button>
       </div>
       <small *ngIf="geocodeMessage" [ngClass]="{'text-green-600': geocodeSuccess, 'text-red-600': !geocodeSuccess}">
         {{geocodeMessage}}

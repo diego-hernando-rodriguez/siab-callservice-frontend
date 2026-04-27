@@ -61,6 +61,7 @@ export interface LlamadaDTO {
   controlCarta?: string;
   estadoPoliza?: string;
   tlgCodigo?: number;
+  dspCiudad?: string;
   // Descriptive fields from PKG_DESCRIPTORES
   dspRamo?: string;
   dspProducto?: string;
@@ -105,6 +106,7 @@ export interface CasoRequestDTO {
   lineaNegocio?: string;
   pais?: string;
   tlgCodigo?: number;
+  dspCiudad?: string;
   placaRiesgo?: string;
 }
 
@@ -277,6 +279,7 @@ export type CalificacionProveedorDTO = CalificacionRequestDTO;
 export interface LocalizacionDTO {
   locgeCodigo?: number;
   tlgCodigo?: number;
+  dspCiudad?: string;
   nombre?: string;
   departamento?: string;
   pais?: string;
