@@ -664,7 +664,37 @@ export class LlamadaFormComponent implements OnInit {
     if (caso.dspCiudad && caso.locgeCodigo) {
       this.selectedCity = { locgeCodigo: caso.locgeCodigo, nombre: caso.dspCiudad, departamento: caso.dspDpto || '', tlgCodigo: caso.tlgCodigo || 3 } as LocalizacionDTO;
     }
-    if (caso.ramoCodigo && caso.productoCodigo) { this.loadCamposBusqueda(); }
+    if (caso.ramoCodigo && caso.productoCodigo) {
+      this.loadCausas();
+      this.loadCamposBusqueda();
+    }
+    // Load contract data (user, tomador, preferencial, tipo asistencia, cobertura)
+    if (caso.contNumeroContrato) {
+      this.polizaService.getDatosContrato(caso.contNumeroContrato).subscribe(res => {
+        if (res.data) {
+          this.llamadaForm.patchValue({
+            usuNumeroDocumento: res.data.usuNumeroDocumento || caso.usuNumeroDocumento || '',
+            dspNombre: res.data.nombreUsuario || caso.dspNombre || '',
+            dspTomador: res.data.nombreTomador || caso.dspTomador || '',
+            preferencial: res.data.preferencial || caso.preferencial || 'N'
+          });
+        }
+      });
+      if (caso.ramoCodigo && caso.productoCodigo && caso.riesgoCodigo) {
+        this.polizaService.getRiesgosCargue(
+          String(caso.ramoCodigo), String(caso.productoCodigo), caso.riesgoCodigo,
+          caso.tipcontCodigo || 1, caso.contNumeroContrato,
+          caso.contFechaInicioVigencia ? String(caso.contFechaInicioVigencia) : '', caso.pecoNumeroOrden || 1
+        ).subscribe(res => {
+          if (res.data) {
+            this.llamadaForm.patchValue({
+              dspTipoAsistencia: res.data.tipoAsistencia || '',
+              dspOpcionCobertura: res.data.opcionCobertura || ''
+            });
+          }
+        });
+      }
+    }
   }
 
   // =============================================
