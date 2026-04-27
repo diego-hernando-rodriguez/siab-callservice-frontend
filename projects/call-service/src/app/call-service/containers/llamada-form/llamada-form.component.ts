@@ -669,8 +669,18 @@ export class LlamadaFormComponent implements OnInit {
       placaRiesgo: caso.placaRiesgo || ''
     });
     this.riesgoQuery = caso.placaRiesgo || '';
-    if (caso.dspCiudad && caso.locgeCodigo) {
-      this.selectedCity = { locgeCodigo: caso.locgeCodigo, nombre: caso.dspCiudad, departamento: caso.dspDpto || '', tlgCodigo: caso.tlgCodigo || 3 } as LocalizacionDTO;
+    // Get city detail with country code to auto-select country dropdown
+    if (caso.locgeCodigo) {
+      this.geographicService.getCityDetail(caso.locgeCodigo).subscribe(res => {
+        if (res.data) {
+          const city = res.data;
+          this.selectedCity = { locgeCodigo: caso.locgeCodigo, nombre: city.nombre || '', departamento: city.departamento || '', tlgCodigo: city.tlgCodigo || 3 } as LocalizacionDTO;
+          this.llamadaForm.patchValue({
+            dspDpto: city.departamento || '',
+            pais: city.pais ? Number(city.pais) : 1
+          });
+        }
+      });
     }
     if (caso.ramoCodigo && caso.productoCodigo) {
       this.loadCausas();

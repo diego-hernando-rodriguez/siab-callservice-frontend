@@ -19,6 +19,10 @@ export class GeographicService {
     return this.http.get<ApiResponse<LocalizacionDTO[]>>(`${this.baseUrl}/localizaciones/lov/ciudades`, { params });
   }
 
+  getCityDetail(locgeCodigo: number): Observable<ApiResponse<LocalizacionDTO>> {
+    return this.http.get<ApiResponse<LocalizacionDTO>>(`${this.baseUrl}/localizaciones/${locgeCodigo}/detalle`);
+  }
+
   geocodeAddress(request: GeocodificacionRequest): Observable<ApiResponse<GeocodificacionResponse>> {
     return this.http.post<ApiResponse<GeocodificacionResponse>>(`${this.baseUrl}/direcciones/geocodificar`, request);
   }
