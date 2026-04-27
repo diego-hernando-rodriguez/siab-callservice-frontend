@@ -49,6 +49,10 @@ export class LlamadaFormComponent implements OnInit {
   geocodingInProgress = false;
   geocodeMessage = '';
   geocodeSuccess = false;
+  showUsuariosDialog = false;
+  showContratosUsuarioDialog = false;
+  usuariosResults: any[] = [];
+  contratosUsuarioResults: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -206,34 +210,52 @@ export class LlamadaFormComponent implements OnInit {
     const pais = raw.pais || 1;
     const codigoCampo = this.selectedCampoBusqueda.codigoCampo!;
 
-    // Step 1: Call P_PRODUCTOS_CONSULTA to get available products
-    this.polizaService.getProductosConsulta(
-      this.riesgoQuery, codigoCampo, pais,
+    // Step 0: CONSULTA_EXISTENTES - check if risk exists in non-ASIS contracts
+    this.polizaService.validarExistente(
+      this.riesgoQuery,
       raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
-      raw.productoCodigo ? String(raw.productoCodigo) : undefined
-    ).subscribe(res => {
-      this.productosResults = res.data || [];
-      if (this.productosResults.length === 1) {
-        // Auto-select if only one product
-        this.onProductoSelected(this.productosResults[0]);
-      } else if (this.productosResults.length > 1) {
-        this.showProductosDialog = true;
-      } else {
-        // No products found - try direct search
-        this.polizaService.searchRisks(this.riesgoQuery).subscribe(riskRes => {
-          if (riskRes.data?.encontrado && riskRes.data.riesgos && riskRes.data.riesgos.length > 0) {
-            if (riskRes.data.riesgos.length === 1) {
-              this.applyRiskSelection(riskRes.data.riesgos[0], riskRes.data);
+      raw.productoCodigo ? String(raw.productoCodigo) : undefined,
+      codigoCampo
+    ).subscribe(existeRes => {
+      const esInexistente = existeRes.data?.indicador === 'N';
+
+      // Step 1: Call P_PRODUCTOS_CONSULTA to get available products
+      this.polizaService.getProductosConsulta(
+        this.riesgoQuery, codigoCampo, pais,
+        raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
+        raw.productoCodigo ? String(raw.productoCodigo) : undefined
+      ).subscribe(res => {
+        this.productosResults = res.data || [];
+
+        if (esInexistente && this.productosResults.length > 0) {
+          // Mark products as inexistente for the user to see
+          this.productosResults = this.productosResults.map(p => ({
+            ...p,
+            _esInexistente: true
+          }));
+        }
+
+        if (this.productosResults.length === 1) {
+          this.onProductoSelected(this.productosResults[0]);
+        } else if (this.productosResults.length > 1) {
+          this.showProductosDialog = true;
+        } else {
+          // No products found - try direct search
+          this.polizaService.searchRisks(this.riesgoQuery).subscribe(riskRes => {
+            if (riskRes.data?.encontrado && riskRes.data.riesgos && riskRes.data.riesgos.length > 0) {
+              if (riskRes.data.riesgos.length === 1) {
+                this.applyRiskSelection(riskRes.data.riesgos[0], riskRes.data);
+              } else {
+                this.riesgoResults = riskRes.data.riesgos;
+                this.showRiesgoSearch = true;
+              }
             } else {
-              this.riesgoResults = riskRes.data.riesgos;
+              this.riesgoResults = [];
               this.showRiesgoSearch = true;
             }
-          } else {
-            this.riesgoResults = [];
-            this.showRiesgoSearch = true;
-          }
-        });
-      }
+          });
+        }
+      });
     });
   }
 
@@ -241,55 +263,101 @@ export class LlamadaFormComponent implements OnInit {
     this.showProductosDialog = false;
     const ramo2 = producto.COD_RAMO || producto.cod_ramo;
     const producto2 = producto.COD_PRODUCTO || producto.cod_producto;
-
-    // Step 2: Call P_RIESGOS_CEDULA to get contracts
     const raw = this.llamadaForm.getRawValue();
-    this.polizaService.getRiesgosCedula(
-      ramo2, producto2, this.riesgoQuery, raw.pais || 1,
-      raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
-      raw.productoCodigo ? String(raw.productoCodigo) : undefined
-    ).subscribe(res => {
-      this.contratosResults = res.data || [];
-      if (this.contratosResults.length === 1) {
-        this.onContratoSelected(this.contratosResults[0]);
-      } else if (this.contratosResults.length > 1) {
-        this.showContratosDialog = true;
-      } else {
-        // No contracts - assign as inexistente
-        this.llamadaForm.patchValue({
-          ramoCodigo: parseInt(ramo2),
-          productoCodigo: parseInt(producto2),
-          dspRiesgoValor: this.riesgoQuery,
-          codigoCampo: this.selectedCampoBusqueda?.codigoCampo
-        });
-        this.loadDescriptores(parseInt(ramo2), parseInt(producto2));
-        this.loadCausas();
-      }
-    });
+    const pais = raw.pais || 1;
+    const codigoCampo = this.selectedCampoBusqueda?.codigoCampo;
+
+    if (codigoCampo === 1) {
+      // Plate: try RIESGOS_AUTOS (vigent contracts)
+      this.polizaService.getRiesgosAutos(this.riesgoQuery, pais, ramo2, producto2).subscribe(res => {
+        this.contratosResults = res.data || [];
+        if (this.contratosResults.length >= 1) {
+          if (this.contratosResults.length === 1) {
+            this.onContratoSelected(this.contratosResults[0]);
+          } else {
+            this.showContratosDialog = true;
+          }
+        } else {
+          // No vigent contract — fallback: direct search (includes expired/ASIS)
+          this.polizaService.searchRisks(this.riesgoQuery).subscribe(riskRes => {
+            const riesgos = riskRes.data?.riesgos || [];
+            if (riesgos.length >= 1) {
+              // Auto-fill with first result + user data
+              const r = riesgos[0];
+              this.llamadaForm.patchValue({
+                contNumeroContrato: r.contNumero, ramoCodigo: r.ramoCodigo,
+                productoCodigo: r.productoCodigo, riesgoCodigo: r.riesgoCodigo,
+                dspRiesgoValor: r.valor, codigoCampo: codigoCampo, placaRiesgo: r.valor,
+                dspTipoAsistencia: riskRes.data?.tipoAsistencia || '',
+                dspOpcionCobertura: riskRes.data?.opcionCobertura || ''
+              });
+              if (r.contNumero) {
+                this.polizaService.getDatosContrato(r.contNumero).subscribe(uRes => {
+                  if (uRes.data?.usuNumeroDocumento) {
+                    this.llamadaForm.patchValue({
+                      usuTipoDocumento: uRes.data.usuTipoDocumento || 'CC',
+                      usuNumeroDocumento: uRes.data.usuNumeroDocumento,
+                      dspNombre: uRes.data.nombreUsuario, dspTomador: uRes.data.nombreTomador,
+                      preferencial: uRes.data.preferencial || 'N'
+                    });
+                  }
+                });
+              }
+              this.loadDescriptores(r.ramoCodigo || parseInt(ramo2), r.productoCodigo || parseInt(producto2));
+              this.loadCausas();
+            } else {
+              // Truly inexistente
+              this.llamadaForm.patchValue({
+                ramoCodigo: parseInt(ramo2), productoCodigo: parseInt(producto2),
+                dspRiesgoValor: this.riesgoQuery, codigoCampo: codigoCampo
+              });
+              this.loadDescriptores(parseInt(ramo2), parseInt(producto2));
+              this.loadCausas();
+            }
+          });
+        }
+      });
+    } else {
+      this.polizaService.getRiesgosCedula(
+        ramo2, producto2, this.riesgoQuery, pais,
+        raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
+        raw.productoCodigo ? String(raw.productoCodigo) : undefined
+      ).subscribe(res => {
+        this.contratosResults = res.data || [];
+        if (this.contratosResults.length === 1) { this.onContratoSelected(this.contratosResults[0]); }
+        else if (this.contratosResults.length > 1) { this.showContratosDialog = true; }
+        else {
+          this.llamadaForm.patchValue({
+            ramoCodigo: parseInt(ramo2), productoCodigo: parseInt(producto2),
+            dspRiesgoValor: this.riesgoQuery, codigoCampo: codigoCampo
+          });
+          this.loadDescriptores(parseInt(ramo2), parseInt(producto2));
+          this.loadCausas();
+          this.triggerUsuarioSearchFlow();
+        }
+      });
+    }
   }
 
   onContratoSelected(contrato: any): void {
     this.showContratosDialog = false;
-    // Step 3: Fill all LLAMADA fields from the selected contract (cg$consultar_riesgo_aseg)
-    const poliza = contrato.POLIZA || contrato.poliza;
-    const ramo = contrato.RAMO_CODIGO || contrato.ramo_codigo;
-    const producto = contrato.PRODUCTO_CODIGO || contrato.producto_codigo;
-    const riesgo = contrato.RIESGO || contrato.riesgo || contrato.RIESGO2 || contrato.riesgo2;
-    const numOrden = contrato.NUM_ORDEN || contrato.num_orden;
-    const tipContrato = contrato.TIP_CONTRATO || contrato.tip_contrato;
-    const valor = contrato.VALOR_RIESGO_ORI || contrato.valor_riesgo_ori || this.riesgoQuery;
+    const poliza = contrato.POLIZA || contrato.poliza || contrato.contNumero;
+    const ramo = contrato.RAMO_CODIGO || contrato.ramo_codigo || contrato.ramoCodigo;
+    const producto = contrato.PRODUCTO_CODIGO || contrato.producto_codigo || contrato.productoCodigo;
+    const riesgo = contrato.RIESGO || contrato.riesgo || contrato.RIESGO2 || contrato.riesgo2 || contrato.riesgoCodigo;
+    const valor = contrato.VALOR_RIESGO_ORI || contrato.valor_riesgo_ori || contrato.valorRiesgo || contrato.VALOR_RIESGO || this.riesgoQuery;
 
     this.llamadaForm.patchValue({
       contNumeroContrato: poliza,
-      ramoCodigo: parseInt(ramo),
-      productoCodigo: parseInt(producto),
+      ramoCodigo: ramo ? parseInt(ramo) : null,
+      productoCodigo: producto ? parseInt(producto) : null,
       riesgoCodigo: riesgo,
       dspRiesgoValor: valor,
       codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
       placaRiesgo: valor
     });
 
-    // Fill user data from contract
+    // cg$consultar_riesgo_aseg Step 1: Fill user data from contract (CGFK$CHK_LLAMADA_LLAMADA_PR2)
     if (poliza) {
       this.polizaService.getDatosContrato(poliza).subscribe(res => {
         if (res.data && res.data.usuNumeroDocumento) {
@@ -300,26 +368,107 @@ export class LlamadaFormComponent implements OnInit {
             dspTomador: res.data.nombreTomador || '',
             preferencial: res.data.preferencial || 'N'
           });
+          // cg$consultar_riesgo_aseg Step 2: If no user found, trigger LOV1 flow
+        } else {
+          this.triggerUsuarioSearchFlow();
         }
       });
       this.validatePoliza(poliza);
+    } else {
+      // No contract - trigger LOV1 flow (inexistente path from cg$consultar_riesgo_aseg)
+      this.triggerUsuarioSearchFlow();
     }
 
-    // Step 4: f_riesgos_cargue for tipo_asistencia and opcion_cobertura
-    this.polizaService.searchRisks(valor).subscribe(res => {
-      if (res.data) {
-        this.llamadaForm.patchValue({
-          dspTipoAsistencia: res.data.tipoAsistencia || '',
-          dspOpcionCobertura: res.data.opcionCobertura || ''
-        });
-      }
-    });
+    // f_riesgos_cargue for tipo_asistencia and opcion_cobertura
+    if (valor) {
+      this.polizaService.searchRisks(valor).subscribe(res => {
+        if (res.data) {
+          this.llamadaForm.patchValue({
+            dspTipoAsistencia: res.data.tipoAsistencia || '',
+            dspOpcionCobertura: res.data.opcionCobertura || ''
+          });
+        }
+      });
+    }
 
-    this.loadDescriptores(parseInt(ramo), parseInt(producto));
+    if (ramo && producto) {
+      this.loadDescriptores(parseInt(ramo), parseInt(producto));
+    }
     this.loadCausas();
     this.loadCamposBusqueda();
     this.validateDuplicate();
     this.evaluatePicoPlaca();
+  }
+
+  /**
+   * cg$consultar_riesgo_aseg inexistente path:
+   * When no user is found from contract, trigger LOV1 (user search) then LOV2 (contract selection).
+   * This replicates the KEY-NEXT-ITEM flow of DSP_USU_NUMERO_DOCUMENTO.
+   */
+  private triggerUsuarioSearchFlow(): void {
+    const raw = this.llamadaForm.getRawValue();
+    const riesgoValor = raw.dspRiesgoValor || this.riesgoQuery;
+    if (riesgoValor) {
+      // LOV1: Search users by the risk value (placa/cedula)
+      this.polizaService.searchUsuarios(riesgoValor).subscribe(res => {
+        this.usuariosResults = res.data || [];
+        if (this.usuariosResults.length === 1) {
+          this.onUsuarioSelected(this.usuariosResults[0]);
+        } else if (this.usuariosResults.length > 1) {
+          this.showUsuariosDialog = true;
+        }
+      });
+    }
+  }
+
+  onUsuarioSelected(usuario: any): void {
+    this.showUsuariosDialog = false;
+    const numDoc = usuario.numeroDocumento || usuario.NUMERO_DOCUMENTO;
+    const tipoDoc = usuario.tipoDocumento || usuario.TIPO_DOCUMENTO || 'CC';
+    const nombre = usuario.nombresApellidos || usuario.NOMBRES_APELLIDOS;
+    const preferencial = usuario.preferencial || usuario.PREFERENCIAL || 'N';
+
+    this.llamadaForm.patchValue({
+      usuNumeroDocumento: numDoc,
+      usuTipoDocumento: tipoDoc,
+      dspNombre: nombre,
+      preferencial: preferencial
+    });
+
+    // LOV2: Get contracts for this user
+    const raw = this.llamadaForm.getRawValue();
+    const codigoCampo = raw.codigoCampo || (this.selectedCampoBusqueda ? this.selectedCampoBusqueda.codigoCampo : 1);
+    this.polizaService.getContratosUsuario(numDoc, tipoDoc, codigoCampo).subscribe(res => {
+      this.contratosUsuarioResults = res.data || [];
+      if (this.contratosUsuarioResults.length === 1) {
+        this.onContratoUsuarioSelected(this.contratosUsuarioResults[0]);
+      } else if (this.contratosUsuarioResults.length > 1) {
+        this.showContratosUsuarioDialog = true;
+      }
+    });
+  }
+
+  onContratoUsuarioSelected(contrato: any): void {
+    this.showContratosUsuarioDialog = false;
+    const poliza = contrato.contNumero || contrato.CONT_NUMERO;
+    const ramo = contrato.ramoCodigo || contrato.RAMO_CODIGO;
+    const producto = contrato.productoCodigo || contrato.PRODUCTO_CODIGO;
+    const riesgo = contrato.riesgo || contrato.RIESGO;
+    const valor = contrato.valorRiesgo || contrato.VALOR_RIESGO;
+
+    this.llamadaForm.patchValue({
+      contNumeroContrato: poliza,
+      ramoCodigo: ramo ? parseInt(ramo) : this.llamadaForm.getRawValue().ramoCodigo,
+      productoCodigo: producto ? parseInt(producto) : this.llamadaForm.getRawValue().productoCodigo,
+      riesgoCodigo: riesgo || this.llamadaForm.getRawValue().riesgoCodigo,
+      dspRiesgoValor: valor || this.llamadaForm.getRawValue().dspRiesgoValor
+    });
+
+    if (ramo && producto) {
+      this.loadDescriptores(parseInt(ramo), parseInt(producto));
+    }
+    this.loadCausas();
+    this.validatePoliza(poliza);
   }
 
   onRiskResultSelected(event: any): void {

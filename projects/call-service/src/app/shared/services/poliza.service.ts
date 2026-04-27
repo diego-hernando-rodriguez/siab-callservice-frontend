@@ -49,4 +49,33 @@ export class PolizaService {
     if (producto) { params.producto = producto; }
     return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/riesgos/lov/contratos`, { params });
   }
+
+  /** LLAMADA_DSP_USU_NUM_LOV1: Search users by document or name */
+  searchUsuarios(query: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/usuarios/lov/buscar`, { params: { query } });
+  }
+
+  /** CONSULTA_EXISTENTES: Check if risk exists in non-ASIS contracts */
+  validarExistente(valor: string, ramo?: string, producto?: string, codigoCampo?: number): Observable<ApiResponse<any>> {
+    let params: any = { valor };
+    if (ramo) { params.ramo = ramo; }
+    if (producto) { params.producto = producto; }
+    if (codigoCampo) { params.codigoCampo = codigoCampo; }
+    return this.http.get<ApiResponse<any>>(`${this.baseUrl}/riesgos/validar-existente`, { params });
+  }
+
+  /** RIESGOS_AUTOS: Search contracts for a plate (codigo_campo=1) */
+  getRiesgosAutos(valor: string, pais: number, ramo?: string, producto?: string): Observable<ApiResponse<any[]>> {
+    let params: any = { valor, pais };
+    if (ramo) { params.ramo = ramo; }
+    if (producto) { params.producto = producto; }
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/riesgos/lov/autos`, { params });
+  }
+
+  /** LLAMADA_DSP_USUARIO_LOV2: Contracts for a user */
+  getContratosUsuario(numeroDocumento: string, tipoDocumento: string, codigoCampo?: number): Observable<ApiResponse<any[]>> {
+    let params: any = { numeroDocumento, tipoDocumento };
+    if (codigoCampo) { params.codigoCampo = codigoCampo; }
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/usuarios/lov/contratos`, { params });
+  }
 }
