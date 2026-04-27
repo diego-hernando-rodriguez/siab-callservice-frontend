@@ -111,6 +111,9 @@ export interface CasoRequestDTO {
   tlgCodigo?: number;
   dspCiudad?: string;
   placaRiesgo?: string;
+  tipcontCodigo?: number;
+  contFechaInicioVigencia?: string;
+  pecoNumeroOrden?: number;
 }
 
 /** @deprecated Use CasoRequestDTO instead */

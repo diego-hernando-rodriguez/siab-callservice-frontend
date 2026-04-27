@@ -111,7 +111,10 @@ export class LlamadaFormComponent implements OnInit {
       severidad: [''],
       lineaNegocio: [''],
       observacionesLar: [''],
-      controlCarta: ['N']
+      controlCarta: ['N'],
+      tipcontCodigo: [null],
+      contFechaInicioVigencia: [null],
+      pecoNumeroOrden: [null]
     });
   }
 
@@ -327,7 +330,10 @@ export class LlamadaFormComponent implements OnInit {
       codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
       placaRiesgo: valor,
       fechaInicioVig: this.formatFecha(inicio),
-      fechaFinVig: this.formatFecha(fin)
+      fechaFinVig: this.formatFecha(fin),
+      tipcontCodigo: tipContrato ? parseInt(tipContrato) : null,
+      contFechaInicioVigencia: inicio || null,
+      pecoNumeroOrden: numOrden ? parseInt(numOrden) : null
     });
 
     // Fill user data from contract
@@ -615,7 +621,9 @@ export class LlamadaFormComponent implements OnInit {
       direccionGeoReferencia: raw.direccionGeoReferencia,
       telefonoLlamada: raw.telefonoLlamada, severidad: raw.severidad,
       lineaNegocio: raw.lineaNegocio, pais: raw.pais ? String(raw.pais) : '1',
-      tlgCodigo: raw.tlgCodigo, placaRiesgo: raw.placaRiesgo || raw.dspRiesgoValor
+      tlgCodigo: raw.tlgCodigo, placaRiesgo: raw.placaRiesgo || raw.dspRiesgoValor,
+      tipcontCodigo: raw.tipcontCodigo, contFechaInicioVigencia: raw.contFechaInicioVigencia,
+      pecoNumeroOrden: raw.pecoNumeroOrden
     };
     if (raw.numero) {
       this.casoService.updateCase(raw.numero, request).subscribe(res => {
