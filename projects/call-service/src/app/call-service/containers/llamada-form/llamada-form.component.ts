@@ -20,13 +20,15 @@ export class LlamadaFormComponent implements OnInit {
 
   llamadaForm!: FormGroup;
   ciudades: LocalizacionDTO[] = [];
-  causas: DominioDTO[] = [];
+  causas: any[] = [];
   paises: LocalizacionDTO[] = [];
   tiposDocumento: DominioDTO[] = [];
   severidades: DominioDTO[] = [];
   lineasNegocio: DominioDTO[] = [];
 
   showRiesgoSearch = false;
+  showProductosDialog = false;
+  showContratosDialog = false;
   showGoogleDirection = false;
   showDuplicateAlert = false;
   showPicoPlacaAlert = false;
@@ -37,11 +39,16 @@ export class LlamadaFormComponent implements OnInit {
   duplicateMessage = '';
   isNewCase = true;
   riesgoResults: any[] = [];
+  productosResults: any[] = [];
+  contratosResults: any[] = [];
   selectedCity: LocalizacionDTO | null = null;
   riesgoQuery = '';
   riesgoSuggestions: any[] = [];
   camposBusqueda: CampoBusquedaDTO[] = [];
   selectedCampoBusqueda: CampoBusquedaDTO | null = null;
+  geocodingInProgress = false;
+  geocodeMessage = '';
+  geocodeSuccess = false;
 
   constructor(
     private fb: FormBuilder,
@@ -79,13 +86,14 @@ export class LlamadaFormComponent implements OnInit {
       dspProducto: [{ value: '', disabled: true }],
       placaRiesgo: [{ value: '', disabled: true }],
       causaCodigo: [null, Validators.required],
+      dspDescripcion2: [{ value: '', disabled: true }],
       fechaInicioVig: [{ value: '', disabled: true }],
       fechaFinVig: [{ value: '', disabled: true }],
       dspTipoAsistencia: [{ value: '', disabled: true }],
       dspOpcionCobertura: [{ value: '', disabled: true }],
       dspCoberturaVehiculo: [{ value: '', disabled: true }],
       usuTipoDocumento: ['CC'],
-      usuNumeroDocumento: ['', Validators.required],
+      usuNumeroDocumento: [{ value: '', disabled: true }],
       dspNombre: [{ value: '', disabled: true }],
       dspTomador: [{ value: '', disabled: true }],
       preferencial: [{ value: '', disabled: true }],
@@ -98,7 +106,7 @@ export class LlamadaFormComponent implements OnInit {
       direccion: ['', Validators.required],
       direccionComplemento: [''],
       direccionGeoReferencia: [{ value: '', disabled: true }],
-      direccionDestino: [''],
+      direccionDestino: [{ value: '', disabled: true }],
       telefonoLlamada: [''],
       severidad: [''],
       lineaNegocio: [''],
@@ -184,21 +192,134 @@ export class LlamadaFormComponent implements OnInit {
     }
   }
 
+  /**
+   * KEY-NEXT-ITEM on RIESGO.VALOR - Full flow from llamada.fmt:
+   * Step 1: P_PRODUCTOS_CONSULTA -> show product selection (lv_productos_consulta)
+   * Step 2: P_RIESGOS_CEDULA -> show contract selection (riesgos_cedula)
+   * Step 3: cg$consultar_riesgo_aseg -> validate and fill LLAMADA fields
+   * Step 4: f_riesgos_cargue -> fill tipo_asistencia and opcion_cobertura
+   */
   onRiskSearch(): void {
-    if (!this.riesgoQuery || this.riesgoQuery.length < 2) { return; }
-    this.polizaService.searchRisks(this.riesgoQuery).subscribe(res => {
-      if (res.data?.encontrado && res.data.riesgos && res.data.riesgos.length > 0) {
-        if (res.data.riesgos.length === 1) {
-          this.applyRiskSelection(res.data.riesgos[0], res.data);
-        } else {
-          this.riesgoResults = res.data.riesgos;
-          this.showRiesgoSearch = true;
-        }
+    if (!this.riesgoQuery || this.riesgoQuery.length < 2 || !this.selectedCampoBusqueda) { return; }
+
+    const raw = this.llamadaForm.getRawValue();
+    const pais = raw.pais || 1;
+    const codigoCampo = this.selectedCampoBusqueda.codigoCampo!;
+
+    // Step 1: Call P_PRODUCTOS_CONSULTA to get available products
+    this.polizaService.getProductosConsulta(
+      this.riesgoQuery, codigoCampo, pais,
+      raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
+      raw.productoCodigo ? String(raw.productoCodigo) : undefined
+    ).subscribe(res => {
+      this.productosResults = res.data || [];
+      if (this.productosResults.length === 1) {
+        // Auto-select if only one product
+        this.onProductoSelected(this.productosResults[0]);
+      } else if (this.productosResults.length > 1) {
+        this.showProductosDialog = true;
       } else {
-        this.riesgoResults = [];
-        this.showRiesgoSearch = true;
+        // No products found - try direct search
+        this.polizaService.searchRisks(this.riesgoQuery).subscribe(riskRes => {
+          if (riskRes.data?.encontrado && riskRes.data.riesgos && riskRes.data.riesgos.length > 0) {
+            if (riskRes.data.riesgos.length === 1) {
+              this.applyRiskSelection(riskRes.data.riesgos[0], riskRes.data);
+            } else {
+              this.riesgoResults = riskRes.data.riesgos;
+              this.showRiesgoSearch = true;
+            }
+          } else {
+            this.riesgoResults = [];
+            this.showRiesgoSearch = true;
+          }
+        });
       }
     });
+  }
+
+  onProductoSelected(producto: any): void {
+    this.showProductosDialog = false;
+    const ramo2 = producto.COD_RAMO || producto.cod_ramo;
+    const producto2 = producto.COD_PRODUCTO || producto.cod_producto;
+
+    // Step 2: Call P_RIESGOS_CEDULA to get contracts
+    const raw = this.llamadaForm.getRawValue();
+    this.polizaService.getRiesgosCedula(
+      ramo2, producto2, this.riesgoQuery, raw.pais || 1,
+      raw.ramoCodigo ? String(raw.ramoCodigo) : undefined,
+      raw.productoCodigo ? String(raw.productoCodigo) : undefined
+    ).subscribe(res => {
+      this.contratosResults = res.data || [];
+      if (this.contratosResults.length === 1) {
+        this.onContratoSelected(this.contratosResults[0]);
+      } else if (this.contratosResults.length > 1) {
+        this.showContratosDialog = true;
+      } else {
+        // No contracts - assign as inexistente
+        this.llamadaForm.patchValue({
+          ramoCodigo: parseInt(ramo2),
+          productoCodigo: parseInt(producto2),
+          dspRiesgoValor: this.riesgoQuery,
+          codigoCampo: this.selectedCampoBusqueda?.codigoCampo
+        });
+        this.loadDescriptores(parseInt(ramo2), parseInt(producto2));
+        this.loadCausas();
+      }
+    });
+  }
+
+  onContratoSelected(contrato: any): void {
+    this.showContratosDialog = false;
+    // Step 3: Fill all LLAMADA fields from the selected contract (cg$consultar_riesgo_aseg)
+    const poliza = contrato.POLIZA || contrato.poliza;
+    const ramo = contrato.RAMO_CODIGO || contrato.ramo_codigo;
+    const producto = contrato.PRODUCTO_CODIGO || contrato.producto_codigo;
+    const riesgo = contrato.RIESGO || contrato.riesgo || contrato.RIESGO2 || contrato.riesgo2;
+    const numOrden = contrato.NUM_ORDEN || contrato.num_orden;
+    const tipContrato = contrato.TIP_CONTRATO || contrato.tip_contrato;
+    const valor = contrato.VALOR_RIESGO_ORI || contrato.valor_riesgo_ori || this.riesgoQuery;
+
+    this.llamadaForm.patchValue({
+      contNumeroContrato: poliza,
+      ramoCodigo: parseInt(ramo),
+      productoCodigo: parseInt(producto),
+      riesgoCodigo: riesgo,
+      dspRiesgoValor: valor,
+      codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
+      placaRiesgo: valor
+    });
+
+    // Fill user data from contract
+    if (poliza) {
+      this.polizaService.getDatosContrato(poliza).subscribe(res => {
+        if (res.data && res.data.usuNumeroDocumento) {
+          this.llamadaForm.patchValue({
+            usuTipoDocumento: res.data.usuTipoDocumento || 'CC',
+            usuNumeroDocumento: res.data.usuNumeroDocumento || '',
+            dspNombre: res.data.nombreUsuario || '',
+            dspTomador: res.data.nombreTomador || '',
+            preferencial: res.data.preferencial || 'N'
+          });
+        }
+      });
+      this.validatePoliza(poliza);
+    }
+
+    // Step 4: f_riesgos_cargue for tipo_asistencia and opcion_cobertura
+    this.polizaService.searchRisks(valor).subscribe(res => {
+      if (res.data) {
+        this.llamadaForm.patchValue({
+          dspTipoAsistencia: res.data.tipoAsistencia || '',
+          dspOpcionCobertura: res.data.opcionCobertura || ''
+        });
+      }
+    });
+
+    this.loadDescriptores(parseInt(ramo), parseInt(producto));
+    this.loadCausas();
+    this.loadCamposBusqueda();
+    this.validateDuplicate();
+    this.evaluatePicoPlaca();
   }
 
   onRiskResultSelected(event: any): void {
@@ -222,7 +343,21 @@ export class LlamadaFormComponent implements OnInit {
         dspOpcionCobertura: searchResponse.opcionCobertura || ''
       });
     }
-    if (riesgo.contNumero) { this.validatePoliza(riesgo.contNumero); }
+    if (riesgo.contNumero) {
+      this.validatePoliza(riesgo.contNumero);
+      // CGFK$CHK_LLAMADA_LLAMADA_PR2: fill user document, name, tomador, preferencial
+      this.polizaService.getDatosContrato(riesgo.contNumero).subscribe(res => {
+        if (res.data && res.data.usuNumeroDocumento) {
+          this.llamadaForm.patchValue({
+            usuTipoDocumento: res.data.usuTipoDocumento || 'CC',
+            usuNumeroDocumento: res.data.usuNumeroDocumento || '',
+            dspNombre: res.data.nombreUsuario || '',
+            dspTomador: res.data.nombreTomador || '',
+            preferencial: res.data.preferencial || 'N'
+          });
+        }
+      });
+    }
     if (riesgo.ramoCodigo && riesgo.productoCodigo) {
       this.loadDescriptores(riesgo.ramoCodigo, riesgo.productoCodigo);
     }
@@ -276,8 +411,38 @@ export class LlamadaFormComponent implements OnInit {
     const raw = this.llamadaForm.getRawValue();
     if (raw.ramoCodigo && raw.productoCodigo) {
       this.casoService.lovCausas(raw.ramoCodigo, raw.productoCodigo).subscribe(res => {
-        this.causas = res.data || [];
+        const data = res.data || [];
+        // Add displayLabel for the dropdown filter
+        this.causas = data.map((c: any) => ({
+          ...c,
+          displayLabel: `${c.codigo} - ${c.descripcion}`
+        }));
       });
+    }
+  }
+
+  /**
+   * WHEN-VALIDATE-ITEM on CAUSA_CODIGO:
+   * 1. CGFK$CHK_LLAMADA_LLAMADA_ORIGI: validates FK, fills DSP_DESCRIPCION2 and DSP_PRODUCTO
+   * 2. If ramo=130, producto=20, causa in (10,20,30,40): pr_conteo_serpre
+   *
+   * KEY-NEXT-ITEM: PR_CONSULTA_DATOS_RIESGO_FORMA then navigate to locge_codigo
+   */
+  onCausaSelected(causaCodigo: number): void {
+    if (!causaCodigo) { return; }
+    const selected = this.causas.find((c: any) => c.codigo === causaCodigo);
+    if (selected) {
+      // CGFK$CHK_LLAMADA_LLAMADA_ORIGI: fill descriptive fields
+      this.llamadaForm.patchValue({
+        dspDescripcion2: selected.descripcion || '',
+        dspProducto: selected.descProducto || this.llamadaForm.getRawValue().dspProducto,
+        dspRamo: selected.descRamo || this.llamadaForm.getRawValue().dspRamo,
+        // If ramo/producto came from the causa selection (when not yet set)
+        ramoCodigo: selected.ramoCodigo || this.llamadaForm.getRawValue().ramoCodigo,
+        productoCodigo: selected.productoCodigo || this.llamadaForm.getRawValue().productoCodigo
+      });
+      // Load campos de busqueda for the new ramo/producto
+      this.loadCamposBusqueda();
     }
   }
 
@@ -331,16 +496,52 @@ export class LlamadaFormComponent implements OnInit {
   // DIRECCION
   // =============================================
 
+  /**
+   * WHEN-VALIDATE-ITEM on LLAMADA.DIRECCION:
+   * Only for pais=1 (Colombia). Calls PKG_GEO_DIRECCION_INTEGRA flow:
+   * 1. FU_DIRECCION_LIMPIA -> clean address
+   * 2. PR_BUSQUEDA_DIRECCION_INTEGRA -> search coordinates
+   * 3. FU_DIRECCION_UNICA(1) -> get geo-referenced address
+   * 4. If INVALIDA -> retry with city name
+   * 5. PR_ACTUALIZA_DIRECCION_GEOREFE -> update characteristics
+   */
+  onDireccionBlur(): void {
+    const raw = this.llamadaForm.getRawValue();
+    if (raw.pais === 1 && raw.locgeCodigo && raw.direccion) {
+      this.onGeocode();
+    }
+  }
+
   onGeocode(): void {
     const raw = this.llamadaForm.getRawValue();
-    if (raw.locgeCodigo && raw.direccion) {
-      this.geographicService.geocodeAddress({ locgeCodigo: raw.locgeCodigo, direccion: raw.direccion })
-        .subscribe(res => {
-          if (res.data?.encontrado) {
-            this.llamadaForm.patchValue({ direccionGeoReferencia: res.data.direccionFormateada || '' });
-          }
-        });
-    }
+    if (!raw.locgeCodigo || !raw.direccion) { return; }
+
+    this.geocodingInProgress = true;
+    this.geocodeMessage = '';
+
+    this.geographicService.geocodeAddress({
+      locgeCodigo: raw.locgeCodigo,
+      direccion: raw.direccion
+    }).subscribe({
+      next: (res) => {
+        this.geocodingInProgress = false;
+        if (res.data?.encontrado) {
+          this.llamadaForm.patchValue({
+            direccionGeoReferencia: res.data.direccionFormateada || ''
+          });
+          this.geocodeSuccess = true;
+          this.geocodeMessage = 'Dirección georreferenciada: ' + (res.data.ciudad || '');
+        } else {
+          this.geocodeSuccess = false;
+          this.geocodeMessage = 'No se encontró información de dirección';
+        }
+      },
+      error: () => {
+        this.geocodingInProgress = false;
+        this.geocodeSuccess = false;
+        this.geocodeMessage = 'Error al georreferenciar la dirección';
+      }
+    });
   }
 
   onGoogleDirection(): void { this.showGoogleDirection = true; }
@@ -360,11 +561,13 @@ export class LlamadaFormComponent implements OnInit {
       causaCodigo: raw.causaCodigo, direccion: raw.direccion,
       usuNumeroDocumento: raw.usuNumeroDocumento, usuTipoDocumento: raw.usuTipoDocumento,
       codigoCampo: raw.codigoCampo, contNumeroContrato: raw.contNumeroContrato,
-      ramoCodigo: raw.ramoCodigo, productoCodigo: raw.productoCodigo,
+      ramoCodigo: raw.ramoCodigo ? String(raw.ramoCodigo) : null,
+      productoCodigo: raw.productoCodigo ? String(raw.productoCodigo) : null,
       observacionesLar: raw.observacionesLar, direccionComplemento: raw.direccionComplemento,
-      direccionDestino: raw.direccionDestino, direccionGeoReferencia: raw.direccionGeoReferencia,
+      direccionGeoReferencia: raw.direccionGeoReferencia,
       telefonoLlamada: raw.telefonoLlamada, severidad: raw.severidad,
-      lineaNegocio: raw.lineaNegocio, pais: raw.pais, tlgCodigo: raw.tlgCodigo
+      lineaNegocio: raw.lineaNegocio, pais: raw.pais ? String(raw.pais) : '1',
+      tlgCodigo: raw.tlgCodigo, placaRiesgo: raw.placaRiesgo || raw.dspRiesgoValor
     };
     if (raw.numero) {
       this.casoService.updateCase(raw.numero, request).subscribe(res => {

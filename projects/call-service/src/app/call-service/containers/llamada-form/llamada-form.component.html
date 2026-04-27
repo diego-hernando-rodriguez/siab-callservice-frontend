@@ -121,11 +121,25 @@
       <label class="font-bold text-sm">Causa *</label>
       <div class="p-inputgroup">
         <p-dropdown [options]="causas" formControlName="causaCodigo"
-          optionLabel="descripcion" optionValue="codigo"
-          [filter]="true" [showClear]="true"
-          placeholder="Seleccione causa" [tabindex]="7" class="w-full">
+          optionLabel="displayLabel" optionValue="codigo"
+          [filter]="true" filterBy="displayLabel" [showClear]="true"
+          placeholder="Seleccione causa" [tabindex]="7" class="w-full"
+          (onChange)="onCausaSelected($event.value)">
+          <ng-template let-item pTemplate="item">
+            <div class="flex flex-column">
+              <span>{{item.codigo}} - {{item.descripcion}}</span>
+              <span class="text-xs text-500">{{item.descRamo}} / {{item.descProducto}}</span>
+            </div>
+          </ng-template>
+          <ng-template let-item pTemplate="selectedItem">
+            <span *ngIf="item">{{item.codigo}} - {{item.descripcion}}</span>
+          </ng-template>
         </p-dropdown>
       </div>
+    </div>
+    <div class="col-12 md:col-3" *ngIf="llamadaForm.get('dspDescripcion2')?.value">
+      <label class="font-bold text-sm">Desc. Causa</label>
+      <input pInputText [value]="llamadaForm.get('dspDescripcion2')?.value" [tabindex]="-1" readonly class="w-full" />
     </div>
   </div>
 
@@ -159,26 +173,15 @@
 
   <!-- FILA 5: Usuario, Tomador, Indicadores especiales -->
   <div class="grid">
-    <div class="col-12 md:col-2">
-      <label class="font-bold text-sm">Tipo Doc. Usuario</label>
-      <p-dropdown [options]="tiposDocumento" formControlName="usuTipoDocumento"
-        optionLabel="rvMeaning" optionValue="rvLowValue"
-        [tabindex]="8" class="w-full">
-      </p-dropdown>
-    </div>
     <div class="col-12 md:col-3">
       <label class="font-bold text-sm">Nro. Doc. Usuario *</label>
-      <div class="p-inputgroup">
-        <input pInputText formControlName="usuNumeroDocumento" [tabindex]="9" />
-        <button pButton icon="pi pi-search" (click)="onUserSearch()" [tabindex]="10"
-          pTooltip="Buscar usuario" aria-label="Buscar usuario"></button>
-      </div>
+      <input pInputText formControlName="usuNumeroDocumento" [tabindex]="8" readonly class="w-full" />
     </div>
-    <div class="col-12 md:col-3">
+    <div class="col-12 md:col-4">
       <label class="font-bold text-sm">Nombre Usuario</label>
       <input pInputText formControlName="dspNombre" [tabindex]="-1" readonly class="w-full" />
     </div>
-    <div class="col-12 md:col-3">
+    <div class="col-12 md:col-4">
       <label class="font-bold text-sm">Tomador</label>
       <input pInputText formControlName="dspTomador" [tabindex]="-1" readonly class="w-full" />
     </div>
@@ -224,12 +227,17 @@
     <div class="col-12 md:col-6">
       <label class="font-bold text-sm">Dirección *</label>
       <div class="p-inputgroup">
-        <input pInputText formControlName="direccion" [tabindex]="11" />
+        <input pInputText formControlName="direccion" [tabindex]="11"
+          (blur)="onDireccionBlur()" />
         <button pButton icon="pi pi-map-marker" (click)="onGeocode()" [tabindex]="12"
-          pTooltip="Georreferenciar" aria-label="Georreferenciar dirección"></button>
+          pTooltip="Georreferenciar" aria-label="Georreferenciar dirección"
+          [loading]="geocodingInProgress"></button>
         <button pButton icon="pi pi-globe" (click)="onGoogleDirection()" [tabindex]="13"
           pTooltip="Buscar en Google Maps" severity="info" aria-label="Buscar en Google Maps"></button>
       </div>
+      <small *ngIf="geocodeMessage" [ngClass]="{'text-green-600': geocodeSuccess, 'text-red-600': !geocodeSuccess}">
+        {{geocodeMessage}}
+      </small>
     </div>
     <div class="col-12 md:col-3">
       <label class="font-bold text-sm">Complemento</label>
@@ -245,7 +253,7 @@
   <div class="grid">
     <div class="col-12 md:col-6">
       <label class="font-bold text-sm">Dirección Destino</label>
-      <input pInputText formControlName="direccionDestino" [tabindex]="15" class="w-full" />
+      <input pInputText formControlName="direccionDestino" [tabindex]="-1" readonly class="w-full" />
     </div>
     <div class="col-12 md:col-3">
       <label class="font-bold text-sm">Teléfono</label>
@@ -302,6 +310,52 @@
   </div>
 
   <!-- Dialogs -->
+
+  <!-- Product Selection Dialog (lv_productos_consulta) -->
+  <p-dialog header="Seleccione Producto" [(visible)]="showProductosDialog" [modal]="true"
+    [style]="{width: '60vw'}" [closable]="true">
+    <p-table [value]="productosResults" [paginator]="true" [rows]="10" selectionMode="single"
+      (onRowSelect)="onProductoSelected($event.data)">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Ramo</th><th>Desc. Ramo</th><th>Producto</th><th>Desc. Producto</th><th>Existe</th><th>Inexistente</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p>
+        <tr [pSelectableRow]="p">
+          <td>{{p.COD_RAMO}}</td><td>{{p.RAMO}}</td><td>{{p.COD_PRODUCTO}}</td><td>{{p.PRODUCTO}}</td>
+          <td>{{p.EXISTE}}</td><td>{{p.INEXISTENTE}}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6" class="text-center p-4">No se encontraron productos para este riesgo</td></tr>
+      </ng-template>
+    </p-table>
+  </p-dialog>
+
+  <!-- Contract Selection Dialog (riesgos_cedula) -->
+  <p-dialog header="Seleccione Contrato" [(visible)]="showContratosDialog" [modal]="true"
+    [style]="{width: '80vw'}" [closable]="true">
+    <p-table [value]="contratosResults" [paginator]="true" [rows]="10" selectionMode="single"
+      (onRowSelect)="onContratoSelected($event.data)">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Poliza</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Riesgo</th>
+          <th>Valor</th><th>Nombre</th><th>Preferencial</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr [pSelectableRow]="c">
+          <td>{{c.POLIZA}}</td><td>{{c.INICIO}}</td><td>{{c.FIN}}</td><td>{{c.ESTADO}}</td>
+          <td>{{c.DESC_RIESGO}}</td><td>{{c.VALOR_RIESGO}}</td>
+          <td>{{c.NOMBRES_APELLIDOS}}</td><td>{{c.PREFERENCIAL}}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="8" class="text-center p-4">No se encontraron contratos</td></tr>
+      </ng-template>
+    </p-table>
+  </p-dialog>
 
   <!-- Risk Search Results Dialog -->
   <p-dialog header="Resultados de Búsqueda de Riesgo" [(visible)]="showRiesgoSearch" [modal]="true"

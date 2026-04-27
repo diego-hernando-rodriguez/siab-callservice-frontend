@@ -50,8 +50,8 @@ export class CasoService {
       { params: { query, page, size: 20 } });
   }
 
-  lovCausas(ramo: number, producto: number): Observable<ApiResponse<DominioDTO[]>> {
-    return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/lov/causas`,
+  lovCausas(ramo: number, producto: number): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/lov/causas`,
       { params: { ramo, producto } });
   }
 

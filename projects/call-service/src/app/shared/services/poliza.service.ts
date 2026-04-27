@@ -24,10 +24,29 @@ export class PolizaService {
     return this.http.get<ApiResponse<PolizaValidacionDTO>>(`${this.baseUrl}/polizas/${contrato}/validar`);
   }
 
+  getDatosContrato(contNumeroContrato: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.baseUrl}/riesgos/datos-contrato`,
+      { params: { contNumeroContrato } });
+  }
+
   getCamposBusqueda(ramo?: string, producto?: string): Observable<ApiResponse<CampoBusquedaDTO[]>> {
     let params: any = {};
     if (ramo) { params.ramo = ramo; }
     if (producto) { params.producto = producto; }
     return this.http.get<ApiResponse<CampoBusquedaDTO[]>>(`${this.baseUrl}/riesgos/campos-busqueda`, { params });
+  }
+
+  getProductosConsulta(valor: string, codigoCampo: number, pais: number, ramo?: string, producto?: string): Observable<ApiResponse<any[]>> {
+    let params: any = { valor, codigoCampo, pais };
+    if (ramo) { params.ramo = ramo; }
+    if (producto) { params.producto = producto; }
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/polizas/lov/productos`, { params });
+  }
+
+  getRiesgosCedula(ramo2: string, producto2: string, valor: string, pais: number, ramo?: string, producto?: string): Observable<ApiResponse<any[]>> {
+    let params: any = { ramo2, producto2, valor, pais };
+    if (ramo) { params.ramo = ramo; }
+    if (producto) { params.producto = producto; }
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/riesgos/lov/contratos`, { params });
   }
 }

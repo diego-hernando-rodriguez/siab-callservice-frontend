@@ -73,21 +73,23 @@ export interface CasoRequest {
   riesgoCodigo: string;
   causaCodigo: number;
   direccion: string;
-  usuNumeroDocumento: string;
+  usuNumeroDocumento?: string;
   usuTipoDocumento?: string;
   codigoCampo?: number;
   contNumeroContrato?: string;
-  ramoCodigo?: number;
-  productoCodigo?: number;
+  ramoCodigo?: string | null;
+  productoCodigo?: string | null;
   observacionesLar?: string;
   direccionComplemento?: string;
-  direccionDestino?: string;
   direccionGeoReferencia?: string;
   telefonoLlamada?: string;
   severidad?: string;
   lineaNegocio?: string;
   pais?: string;
   tlgCodigo?: number;
+  tipcontCodigo?: number;
+  pecoNumeroOrden?: number;
+  placaRiesgo?: string;
 }
 
 // === Service Management ===
