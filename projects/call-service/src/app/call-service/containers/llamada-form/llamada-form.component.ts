@@ -402,7 +402,7 @@ export class LlamadaFormComponent implements OnInit {
     this.configuracionService.getDescriptor('RAMO', String(ramo)).subscribe(res => {
       this.llamadaForm.patchValue({ dspRamo: res.data?.descripcion || '' });
     });
-    this.configuracionService.getDescriptor('PRODUCTO', String(producto)).subscribe(res => {
+    this.configuracionService.getDescriptor('PRODUCTO', String(producto), String(ramo)).subscribe(res => {
       this.llamadaForm.patchValue({ dspProducto: res.data?.descripcion || '' });
     });
   }

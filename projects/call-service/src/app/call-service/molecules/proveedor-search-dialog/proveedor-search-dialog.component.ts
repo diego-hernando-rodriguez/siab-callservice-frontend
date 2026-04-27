@@ -20,7 +20,7 @@ export class ProveedorSearchDialogComponent {
 
   onSearch(): void {
     if (this.servCodigo && this.clservCodigo && this.locgeCodigo) {
-      this.proveedorService.searchProviders(this.servCodigo, this.clservCodigo, this.locgeCodigo).subscribe(res => {
+      this.proveedorService.buscarProveedores(this.servCodigo, this.clservCodigo, this.locgeCodigo).subscribe((res: any) => {
         this.proveedores = res.data || [];
       });
     }

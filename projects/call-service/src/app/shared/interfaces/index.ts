@@ -1,5 +1,6 @@
 /**
- * All TypeScript interfaces matching backend DTOs
+ * All TypeScript interfaces matching backend DTOs.
+ * Each interface mirrors the corresponding Java DTO in siab-callservice-ms.
  */
 
 // === API Response Wrapper ===
@@ -11,7 +12,18 @@ export interface ApiResponse<T> {
   timestamp?: string;
 }
 
+// === Paginated Response ===
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
 // === Case Management ===
+
+/** Mirrors CasoResponseDTO — full case record with descriptive fields */
 export interface LlamadaDTO {
   numero?: number;
   contNumeroContrato?: string;
@@ -48,6 +60,7 @@ export interface LlamadaDTO {
   origen?: string;
   controlCarta?: string;
   estadoPoliza?: string;
+  tlgCodigo?: number;
   // Descriptive fields from PKG_DESCRIPTORES
   dspRamo?: string;
   dspProducto?: string;
@@ -63,22 +76,27 @@ export interface LlamadaDTO {
   dspTipoAsistencia?: string;
   dspOpcionCobertura?: string;
   dspCoberturaVehiculo?: string;
+  dspDescripcion2?: string;
   excepciones?: number;
   fechaInicioVig?: string;
   fechaFinVig?: string;
 }
 
-export interface CasoRequest {
+/** Alias — CasoResponseDTO is the same shape as LlamadaDTO */
+export type CasoResponseDTO = LlamadaDTO;
+
+/** Mirrors CasoRequestDTO — payload for creating/updating a case */
+export interface CasoRequestDTO {
   locgeCodigo: number;
-  riesgoCodigo: string;
   causaCodigo: number;
   direccion: string;
-  usuNumeroDocumento?: string;
-  usuTipoDocumento?: string;
-  codigoCampo?: number;
+  riesgoCodigo?: string;
   contNumeroContrato?: string;
   ramoCodigo?: string | null;
   productoCodigo?: string | null;
+  codigoCampo?: number;
+  usuTipoDocumento?: string;
+  usuNumeroDocumento?: string;
   observacionesLar?: string;
   direccionComplemento?: string;
   direccionGeoReferencia?: string;
@@ -87,50 +105,70 @@ export interface CasoRequest {
   lineaNegocio?: string;
   pais?: string;
   tlgCodigo?: number;
-  tipcontCodigo?: number;
-  pecoNumeroOrden?: number;
   placaRiesgo?: string;
 }
 
+/** @deprecated Use CasoRequestDTO instead */
+export type CasoRequest = CasoRequestDTO;
+
 // === Service Management ===
-export interface ServicioPrestadoDTO {
-  numeroAutorizacion?: number;
+
+/** Mirrors ServicioResponseDTO — full service record */
+export interface ServicioResponseDTO {
   llamadaNumero?: number;
-  servCodigo?: number;
   clservCodigo?: number;
-  estadoServicio?: string;
-  moneda?: string;
+  servCodigo?: number;
+  fechaServicio?: string;
+  horaServicio?: string;
+  numeroAutorizacion?: number;
   consecutivoPunto?: number;
-  personaNombre?: string;
+  estadoServicio?: string;
   valorServicio?: number;
+  moneda?: string;
+  direccionOrigen?: string;
+  direccionDestino?: string;
+  observaciones?: string;
   valorTotal?: number;
   totalAdicionales?: number;
   porcentajeImpuesto?: number;
-  direccionOrigen?: string;
-  direccionDestino?: string;
-  fechaServicio?: string;
-  horaServicio?: string;
   mcaEnvioClicksoftware?: string;
   tipoDespacho?: string;
+  zona?: string;
+  elite?: string;
+  // Descriptive fields
   dspServCodigo?: string;
   dspClaseServicio?: string;
   dspEstadoServ?: string;
   dspPersonaNombre?: string;
+}
+
+/** @deprecated Use ServicioResponseDTO instead */
+export type ServicioPrestadoDTO = ServicioResponseDTO;
+
+/** Mirrors ServicioRequestDTO — payload for creating/updating a service */
+export interface ServicioRequestDTO {
+  servCodigo: number;
+  clservCodigo: number;
+  direccionOrigen?: string;
+  direccionDestino?: string;
   observaciones?: string;
-  zona?: string;
-  elite?: string;
+  moneda?: string;
 }
 
 // === Characteristics ===
 export interface CaracteristicaCausaDTO {
   codigoCampo?: number;
-  valor?: string;
-  dspCampo?: string;
-  dspTipoDato?: string;
+  nombre?: string;
+  tipoDato?: string;
   listaValores?: string;
   requerido?: string;
-  campoNoModificable?: string;
+  noModificable?: string;
   codigoCampoPadre?: number;
+  valor?: string;
+  // Legacy aliases
+  dspCampo?: string;
+  dspTipoDato?: string;
+  campoNoModificable?: string;
 }
 
 export interface CaracteristicaCausaResponse {
@@ -139,19 +177,19 @@ export interface CaracteristicaCausaResponse {
   totalRegistros?: number;
 }
 
-// === Risk/Policy ===
+// === Risk / Policy ===
 export interface RiesgoAseguradoDTO {
   contNumero?: string;
   riesgoCodigo?: string;
   codigoCampo?: number;
   valor?: string;
-  valorSinCeros?: string;
   ramoCodigo?: number;
   productoCodigo?: number;
   tipcontCodigo?: number;
   pecoNumeroOrden?: number;
   estado?: string;
   numeroOrden?: number;
+  valorSinCeros?: string;
 }
 
 export interface RiesgoBusquedaResponse {
@@ -174,40 +212,75 @@ export interface PolizaValidacionDTO {
   pideIdTitular?: boolean;
 }
 
+export interface CampoBusquedaDTO {
+  codigoCampo?: number;
+  nombreCampo?: string;
+  riesgoCodigo?: string;
+}
+
+export interface ProductoConsultaDTO {
+  codRamo?: string;
+  codProducto?: string;
+  descProducto?: string;
+}
+
+export interface ContratoDTO {
+  poliza?: string;
+  ramoCodigo?: string;
+  productoCodigo?: string;
+  riesgo?: string;
+  numOrden?: number;
+  tipContrato?: string;
+  valorRiesgoOri?: string;
+}
+
+export interface DatosContratoDTO {
+  usuTipoDocumento?: string;
+  usuNumeroDocumento?: string;
+  nombreUsuario?: string;
+  nombreTomador?: string;
+  preferencial?: string;
+}
+
 // === Provider ===
 export interface ProveedorDTO {
   consecutivoPunto?: number;
-  personaNumeroDocumento?: string;
   nombre?: string;
   estado?: string;
+  zona?: string;
+  celular?: string;
+  esElite?: boolean;
+  // Extended fields
+  personaNumeroDocumento?: string;
   servCodigo?: number;
   clservCodigo?: number;
   locgeCodigo?: number;
-  zona?: string;
-  celular?: string;
-  elite?: string;
 }
 
-export interface CalificacionProveedorDTO {
-  numeroAutorizacion?: number;
+export interface CalificacionRequestDTO {
   consecutivoPunto?: number;
+  llamadaNumero?: number;
+  numeroAutorizacion?: number;
   amabilidad?: number;
   calificacionGeneral?: number;
-  calificacionTiempo?: number;
-  calificacionServicio?: number;
-  calificacionPresentacion?: number;
-  calificacionHerramientas?: number;
+  tiempo?: number;
+  servicio?: number;
+  presentacion?: number;
+  herramientas?: number;
   observaciones?: string;
 }
+
+/** @deprecated Use CalificacionRequestDTO instead */
+export type CalificacionProveedorDTO = CalificacionRequestDTO;
 
 // === Geographic ===
 export interface LocalizacionDTO {
   locgeCodigo?: number;
   tlgCodigo?: number;
   nombre?: string;
-  locgeCodigoPadre?: number;
-  pais?: string;
   departamento?: string;
+  pais?: string;
+  locgeCodigoPadre?: number;
   latitud?: string;
   longitud?: string;
 }
@@ -219,8 +292,8 @@ export interface GeocodificacionRequest {
 }
 
 export interface GeocodificacionResponse {
-  latitud?: string;
-  longitud?: string;
+  latitud?: number;
+  longitud?: number;
   direccionFormateada?: string;
   ciudad?: string;
   encontrado?: boolean;
@@ -256,16 +329,25 @@ export interface VariableGlobalDTO {
   valor?: string;
 }
 
+export interface CausaDTO {
+  causaCodigo?: number;
+  descripcion?: string;
+  ramoCodigo?: string;
+  productoCodigo?: string;
+}
+
 // === Tariff ===
 export interface TarifaDTO {
-  tarifaCodigo?: number;
   llamadaNumero?: number;
   numeroAutorizacion?: number;
+  tarifaCodigo?: number;
+  valorUnitario?: number;
+  cantidad?: number;
+  valorTotal?: number;
   valorTarifa?: number;
   valorImpuesto?: number;
   porcentajeImpuesto?: number;
   valorDescuento?: number;
-  valorTotal?: number;
   estado?: string;
   detalles?: DetalleTarifaDTO[];
 }
@@ -282,70 +364,120 @@ export interface DetalleTarifaDTO {
 
 export interface RutaIntermediaDTO {
   id?: number;
+  locgeCodigo?: number;
+  nombre?: string;
+  distanciaKm?: number;
   secuencia?: number;
   direccion?: string;
   latitud?: string;
   longitud?: string;
-  distanciaKm?: number;
   descripcion?: string;
 }
 
-// === Additional ===
-export interface AdicionalesPrestadosDTO {
+// === Sub-resources: Citas, Adicionales, Ingresos ===
+export interface CitaDTO {
+  id?: number;
   llamadaNumero?: number;
   numeroAutorizacion?: number;
-  codigo?: number;
+  fechaAsignacion?: string;
+  horaInicial?: string;
+  observaciones?: string;
+  estado?: string;
+}
+
+export interface AdicionalDTO {
+  id?: number;
   tipoServicio?: string;
-  lTipoServicio?: string;
   hrsEspera?: number;
   valorUnitario?: number;
   valorTotal?: number;
+  // Extended fields
+  llamadaNumero?: number;
+  numeroAutorizacion?: number;
+  codigo?: number;
+  lTipoServicio?: string;
   sumaAdicional?: number;
 }
 
+/** @deprecated Use AdicionalDTO instead */
+export type AdicionalesPrestadosDTO = AdicionalDTO;
+
 export interface IngresoDTO {
-  secuencia?: number;
+  id?: number;
   numeroAutorizacion?: number;
   formaPago?: string;
   valor?: number;
+  fecha?: string;
+  // Extended fields
+  secuencia?: number;
   totalPagadoUsr?: number;
   pendiente?: number;
   fechaCreacion?: string;
   dspEntidadNombre?: string;
 }
 
+export interface InfoServicioDTO {
+  codigoCampo?: number;
+  nombre?: string;
+  tipoDato?: string;
+  valor?: string;
+  requerido?: string;
+  // Legacy alias
+  dspCampo?: string;
+  numeroAutorizacion?: number;
+}
+
+/** @deprecated Use InfoServicioDTO instead */
+export type InformacionServicioDTO = InfoServicioDTO;
+
+// === Exceptions, Letters, Agreements ===
 export interface ExcepcionDTO {
   id?: number;
   numeroLlamada?: number;
+  codigoPolitica?: string;
   estadoAutorizado?: string;
   observacionAutorizador?: string;
+  fechaAutorizacion?: string;
 }
 
-export interface CoberturaDTO {
+export interface CartaDTO {
   id?: number;
   llamadaNumero?: number;
-  cobertura?: string;
+  tipoCarta?: string;
+  estado?: string;
+  fechaCreacion?: string;
+}
+
+export interface AcuerdoDTO {
+  id?: number;
+  descripcion?: string;
   estado?: string;
 }
 
-export interface CitaDTO {
-  id?: number;
-  llamadaNumero?: number;
-  numeroAutorizacion?: number;
-  estado?: string;
-  fechaAsignacion?: string;
-  horaInicial?: string;
-  observaciones?: string;
+// === Reclasificacion ===
+export interface ReclasificacionRequestDTO {
+  nuevoRamoCodigo: string;
+  nuevoProductoCodigo: string;
+  nuevaCausaCodigo: number;
+  codRazonReclasifica: number;
 }
 
-export interface InformacionServicioDTO {
-  numeroAutorizacion?: number;
-  codigoCampo?: number;
-  valor?: string;
-  requerido?: string;
-  dspCampo?: string;
+export interface ReclasificacionResponseDTO {
+  numero?: number;
+  ramoCodigo?: string;
+  productoCodigo?: string;
+  causaCodigo?: number;
+  mensaje?: string;
 }
 
+// === Notifications ===
+export interface NotificacionRequestDTO {
+  destinatario: string;
+  tipo: string;
+  contenido: string;
+}
+
+// === Misc ===
 export interface InformacionUsuarioDTO {
   usuNumeroDocumento?: string;
   usuTipoDocumento?: string;
@@ -353,18 +485,9 @@ export interface InformacionUsuarioDTO {
   valor?: string;
 }
 
-// === Risk Search Fields (LOV12) ===
-export interface CampoBusquedaDTO {
-  codigoCampo?: number;
-  nombreCampo?: string;
-  riesgoCodigo?: string;
-}
-
-// === Paginated Response ===
-export interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
+export interface CoberturaDTO {
+  id?: number;
+  llamadaNumero?: number;
+  cobertura?: string;
+  estado?: string;
 }

@@ -22,20 +22,14 @@ export class CausaCharacteristicsComponent implements OnInit {
     this.ramoCodigo = ramo;
     this.productoCodigo = producto;
     this.causaCodigo = causa;
-    this.caracteristicaService.loadCharacteristics(llamadaNumero, ramo, producto, causa).subscribe(res => {
+    this.caracteristicaService.getValoresCaso(llamadaNumero).subscribe((res: any) => {
       this.caracteristicas = res.data?.caracteristicas || [];
     });
   }
 
   onSave(): void {
     if (this.llamadaNumero) {
-      this.caracteristicaService.saveCharacteristics(this.llamadaNumero, {
-        llamadaNumero: this.llamadaNumero,
-        ramoCodigo: this.ramoCodigo,
-        productoCodigo: this.productoCodigo,
-        causaCodigo: this.causaCodigo,
-        caracteristicas: this.caracteristicas
-      }).subscribe();
+      this.caracteristicaService.guardarValores(this.llamadaNumero, this.caracteristicas).subscribe();
     }
   }
 }
