@@ -95,11 +95,7 @@
   <div class="grid">
     <div class="col-12 md:col-3">
       <label class="font-bold text-sm">Contrato / Póliza</label>
-      <div class="p-inputgroup">
-        <input pInputText formControlName="contNumeroContrato" [tabindex]="5" readonly />
-        <button pButton icon="pi pi-search" (click)="onPolizaSearch()" [tabindex]="6"
-          pTooltip="Buscar póliza" aria-label="Buscar póliza"></button>
-      </div>
+      <input pInputText formControlName="contNumeroContrato" [tabindex]="-1" readonly class="w-full" />
     </div>
     <div class="col-12 md:col-1">
       <label class="font-bold text-sm">Ramo</label>
@@ -117,25 +113,24 @@
       <label class="font-bold text-sm">Desc. Producto</label>
       <input pInputText formControlName="dspProducto" [tabindex]="-1" readonly class="w-full" />
     </div>
-    <div class="col-12 md:col-3">
+    <div class="col-12 md:col-4">
       <label class="font-bold text-sm">Causa *</label>
-      <div class="p-inputgroup">
-        <p-dropdown [options]="causas" formControlName="causaCodigo"
-          optionLabel="displayLabel" optionValue="codigo"
-          [filter]="true" filterBy="displayLabel" [showClear]="true"
-          placeholder="Seleccione causa" [tabindex]="7" class="w-full"
-          (onChange)="onCausaSelected($event.value)">
-          <ng-template let-item pTemplate="item">
-            <div class="flex flex-column">
-              <span>{{item.codigo}} - {{item.descripcion}}</span>
-              <span class="text-xs text-500">{{item.descRamo}} / {{item.descProducto}}</span>
-            </div>
-          </ng-template>
-          <ng-template let-item pTemplate="selectedItem">
-            <span *ngIf="item">{{item.codigo}} - {{item.descripcion}}</span>
-          </ng-template>
-        </p-dropdown>
-      </div>
+      <p-dropdown [options]="causas" formControlName="causaCodigo"
+        optionLabel="displayLabel" optionValue="codigo"
+        [filter]="true" filterBy="displayLabel" [showClear]="true"
+        placeholder="Seleccione causa" [tabindex]="7"
+        [style]="{'width':'100%'}"
+        (onChange)="onCausaSelected($event.value)">
+        <ng-template let-item pTemplate="item">
+          <div>
+            <span>{{item.codigo}} - {{item.descripcion}}</span>
+            <span class="text-xs text-500 ml-2">({{item.descRamo}} / {{item.descProducto}})</span>
+          </div>
+        </ng-template>
+        <ng-template let-item pTemplate="selectedItem">
+          <span *ngIf="item">{{item.codigo}} - {{item.descripcion}}</span>
+        </ng-template>
+      </p-dropdown>
     </div>
     <div class="col-12 md:col-3" *ngIf="llamadaForm.get('dspDescripcion2')?.value">
       <label class="font-bold text-sm">Desc. Causa</label>
@@ -232,8 +227,6 @@
         <button pButton icon="pi pi-map-marker" (click)="onGeocode()" [tabindex]="12"
           pTooltip="Georreferenciar" aria-label="Georreferenciar dirección"
           [loading]="geocodingInProgress"></button>
-        <button pButton icon="pi pi-globe" (click)="onGoogleDirection()" [tabindex]="13"
-          pTooltip="Buscar en Google Maps" severity="info" aria-label="Buscar en Google Maps"></button>
       </div>
       <small *ngIf="geocodeMessage" [ngClass]="{'text-green-600': geocodeSuccess, 'text-red-600': !geocodeSuccess}">
         {{geocodeMessage}}
@@ -274,12 +267,16 @@
     </div>
   </div>
 
-  <!-- FILA 9: Observaciones -->
+  <!-- FILA 9: Origen + Observaciones -->
   <div class="grid">
-    <div class="col-12">
+    <div class="col-12 md:col-2">
+      <label class="font-bold text-sm">Origen</label>
+      <input pInputText formControlName="origen" [tabindex]="-1" readonly class="w-full" />
+    </div>
+    <div class="col-12 md:col-10">
       <label class="font-bold text-sm">Observaciones</label>
       <textarea pInputTextarea formControlName="observacionesLar" [rows]="3" [tabindex]="19"
-        class="w-full"></textarea>
+        class="w-full" placeholder="Ingrese observaciones del caso"></textarea>
     </div>
   </div>
 

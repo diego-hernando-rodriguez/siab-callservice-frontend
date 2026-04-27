@@ -18,8 +18,11 @@ export class ConfiguracionService {
     return this.http.get<ApiResponse<DominioDTO[]>>(`${this.baseUrl}/dominios/${dominio}`);
   }
 
-  getDescriptor(tipo: string, codigo: string): Observable<ApiResponse<DescriptorDTO>> {
-    return this.http.get<ApiResponse<DescriptorDTO>>(`${this.baseUrl}/descriptores/${tipo}/${codigo}`);
+  getDescriptor(tipo: string, codigo: string, ramo?: number, producto?: number): Observable<ApiResponse<DescriptorDTO>> {
+    let params: any = {};
+    if (ramo) { params.ramo = ramo; }
+    if (producto) { params.producto = producto; }
+    return this.http.get<ApiResponse<DescriptorDTO>>(`${this.baseUrl}/descriptores/${tipo}/${codigo}`, { params });
   }
 
   getVariablesGlobales(): Observable<ApiResponse<VariableGlobalDTO[]>> {

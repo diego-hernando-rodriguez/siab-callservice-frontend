@@ -84,6 +84,8 @@ export class LlamadaFormComponent implements OnInit {
       riesgoCodigo: [''],
       contNumeroContrato: [{ value: '', disabled: true }],
       codigoCampo: [null],
+      tipcontCodigo: [null],
+      pecoNumeroOrden: [null],
       ramoCodigo: [{ value: null, disabled: true }],
       productoCodigo: [{ value: null, disabled: true }],
       dspRamo: [{ value: '', disabled: true }],
@@ -105,7 +107,6 @@ export class LlamadaFormComponent implements OnInit {
       dspMechoqueHacedias: [{ value: '', disabled: true }],
       altoValor: [{ value: '', disabled: true }],
       acuerdoCliente: [{ value: '', disabled: true }],
-      origen: [{ value: '', disabled: true }],
       dspEnviadoCasoClick: [{ value: '', disabled: true }],
       direccion: ['', Validators.required],
       direccionComplemento: [''],
@@ -115,7 +116,8 @@ export class LlamadaFormComponent implements OnInit {
       severidad: [''],
       lineaNegocio: [''],
       observacionesLar: [''],
-      controlCarta: ['N']
+      controlCarta: ['N'],
+      origen: [{ value: 'LLA_SIAB', disabled: true }]
     });
   }
 
@@ -354,7 +356,9 @@ export class LlamadaFormComponent implements OnInit {
       riesgoCodigo: riesgo,
       dspRiesgoValor: valor,
       codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
-      placaRiesgo: valor
+      placaRiesgo: valor,
+      tipcontCodigo: contrato.tipContrato || contrato.TIP_CONTRATO || contrato.tip_contrato || null,
+      pecoNumeroOrden: contrato.numOrden || contrato.NUM_ORDEN || contrato.num_orden || null
     });
 
     // cg$consultar_riesgo_aseg Step 1: Fill user data from contract (CGFK$CHK_LLAMADA_LLAMADA_PR2)
@@ -551,7 +555,7 @@ export class LlamadaFormComponent implements OnInit {
     this.configuracionService.getDescriptor('RAMO', String(ramo)).subscribe(res => {
       this.llamadaForm.patchValue({ dspRamo: res.data?.descripcion || '' });
     });
-    this.configuracionService.getDescriptor('PRODUCTO', String(producto)).subscribe(res => {
+    this.configuracionService.getDescriptor('PRODUCTO', String(producto), ramo).subscribe(res => {
       this.llamadaForm.patchValue({ dspProducto: res.data?.descripcion || '' });
     });
   }
@@ -656,21 +660,23 @@ export class LlamadaFormComponent implements OnInit {
    */
   onDireccionBlur(): void {
     const raw = this.llamadaForm.getRawValue();
-    if (raw.pais === 1 && raw.locgeCodigo && raw.direccion) {
+    if (raw.direccion && raw.direccion.length > 3) {
       this.onGeocode();
     }
   }
 
   onGeocode(): void {
     const raw = this.llamadaForm.getRawValue();
-    if (!raw.locgeCodigo || !raw.direccion) { return; }
+    const locge = raw.locgeCodigo || 14000; // Default to Bogota if not set
+    const dir = raw.direccion;
+    if (!dir) { return; }
 
     this.geocodingInProgress = true;
     this.geocodeMessage = '';
 
     this.geographicService.geocodeAddress({
-      locgeCodigo: raw.locgeCodigo,
-      direccion: raw.direccion
+      locgeCodigo: locge,
+      direccion: dir
     }).subscribe({
       next: (res) => {
         this.geocodingInProgress = false;
@@ -685,10 +691,10 @@ export class LlamadaFormComponent implements OnInit {
           this.geocodeMessage = 'No se encontró información de dirección';
         }
       },
-      error: () => {
+      error: (err) => {
         this.geocodingInProgress = false;
         this.geocodeSuccess = false;
-        this.geocodeMessage = 'Error al georreferenciar la dirección';
+        this.geocodeMessage = 'Error al georreferenciar: ' + (err.error?.message || err.message || 'Error desconocido');
       }
     });
   }
@@ -705,6 +711,15 @@ export class LlamadaFormComponent implements OnInit {
       return;
     }
     const raw = this.llamadaForm.getRawValue();
+
+    // PRE-INSERT observaciones logic from fmt:
+    // If observacionesLar is null -> "INICIO DE CASO"
+    // If has content -> format as &USER|DATE|TEXT
+    let obsLar = raw.observacionesLar;
+    if (!obsLar || obsLar.trim() === '') {
+      obsLar = 'INICIO DE CASO';
+    }
+
     const request = {
       locgeCodigo: raw.locgeCodigo, riesgoCodigo: raw.riesgoCodigo || raw.dspRiesgoValor,
       causaCodigo: raw.causaCodigo, direccion: raw.direccion,
@@ -712,11 +727,12 @@ export class LlamadaFormComponent implements OnInit {
       codigoCampo: raw.codigoCampo, contNumeroContrato: raw.contNumeroContrato,
       ramoCodigo: raw.ramoCodigo ? String(raw.ramoCodigo) : null,
       productoCodigo: raw.productoCodigo ? String(raw.productoCodigo) : null,
-      observacionesLar: raw.observacionesLar, direccionComplemento: raw.direccionComplemento,
+      observacionesLar: obsLar, direccionComplemento: raw.direccionComplemento,
       direccionGeoReferencia: raw.direccionGeoReferencia,
       telefonoLlamada: raw.telefonoLlamada, severidad: raw.severidad,
       lineaNegocio: raw.lineaNegocio, pais: raw.pais ? String(raw.pais) : '1',
-      tlgCodigo: raw.tlgCodigo, placaRiesgo: raw.placaRiesgo || raw.dspRiesgoValor
+      tlgCodigo: raw.tlgCodigo, placaRiesgo: raw.placaRiesgo || raw.dspRiesgoValor,
+      tipcontCodigo: raw.tipcontCodigo, pecoNumeroOrden: raw.pecoNumeroOrden
     };
     if (raw.numero) {
       this.casoService.updateCase(raw.numero, request).subscribe(res => {
@@ -757,7 +773,8 @@ export class LlamadaFormComponent implements OnInit {
       direccionGeoReferencia: caso.direccionGeoReferencia || '',
       direccionDestino: caso.direccionDestino || '', telefonoLlamada: caso.telefonoLlamada || '',
       severidad: caso.severidad || '', lineaNegocio: caso.lineaNegocio || '',
-      observacionesLar: caso.observacionesLar || '', codigoCampo: caso.codigoCampo
+      observacionesLar: caso.observacionesLar || '', codigoCampo: caso.codigoCampo,
+      origen: caso.origen || 'LLA_SIAB'
     });
     if (caso.ramoCodigo && caso.productoCodigo) { this.loadCamposBusqueda(); }
   }
