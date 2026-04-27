@@ -84,8 +84,6 @@ export class LlamadaFormComponent implements OnInit {
       riesgoCodigo: [''],
       contNumeroContrato: [{ value: '', disabled: true }],
       codigoCampo: [null],
-      tipcontCodigo: [null],
-      pecoNumeroOrden: [null],
       ramoCodigo: [{ value: null, disabled: true }],
       productoCodigo: [{ value: null, disabled: true }],
       dspRamo: [{ value: '', disabled: true }],
@@ -117,6 +115,7 @@ export class LlamadaFormComponent implements OnInit {
       lineaNegocio: [''],
       observacionesLar: [''],
       controlCarta: ['N'],
+      origen: [{ value: 'LLA_SIAB', disabled: true }],
       tipcontCodigo: [null],
       contFechaInicioVigencia: [null],
       pecoNumeroOrden: [null]
@@ -350,6 +349,10 @@ export class LlamadaFormComponent implements OnInit {
     const producto = contrato.PRODUCTO_CODIGO || contrato.producto_codigo || contrato.productoCodigo;
     const riesgo = contrato.RIESGO || contrato.riesgo || contrato.RIESGO2 || contrato.riesgo2 || contrato.riesgoCodigo;
     const valor = contrato.VALOR_RIESGO_ORI || contrato.valor_riesgo_ori || contrato.valorRiesgo || contrato.VALOR_RIESGO || this.riesgoQuery;
+    const inicio = contrato.inicio || contrato.INICIO || contrato.fechaInicio || null;
+    const fin = contrato.fin || contrato.FIN || contrato.fechaFin || null;
+    const tipContrato = contrato.tipContrato || contrato.TIP_CONTRATO || contrato.tip_contrato || null;
+    const numOrden = contrato.numOrden || contrato.NUM_ORDEN || contrato.num_orden || null;
 
     this.llamadaForm.patchValue({
       contNumeroContrato: poliza,
@@ -839,5 +842,11 @@ export class LlamadaFormComponent implements OnInit {
     this.riesgoQuery = '';
     this.camposBusqueda = [];
     this.selectedCampoBusqueda = null;
+  }
+
+  private formatFecha(fecha: any): string {
+    if (!fecha) { return ''; }
+    if (typeof fecha === 'string') { return fecha.substring(0, 10); }
+    return String(fecha);
   }
 }
