@@ -117,7 +117,9 @@ export class LlamadaFormComponent implements OnInit {
       lineaNegocio: [''],
       observacionesLar: [''],
       controlCarta: ['N'],
-      origen: [{ value: 'LLA_SIAB', disabled: true }]
+      tipcontCodigo: [null],
+      contFechaInicioVigencia: [null],
+      pecoNumeroOrden: [null]
     });
   }
 
@@ -357,8 +359,11 @@ export class LlamadaFormComponent implements OnInit {
       dspRiesgoValor: valor,
       codigoCampo: this.selectedCampoBusqueda?.codigoCampo,
       placaRiesgo: valor,
-      tipcontCodigo: contrato.tipContrato || contrato.TIP_CONTRATO || contrato.tip_contrato || null,
-      pecoNumeroOrden: contrato.numOrden || contrato.NUM_ORDEN || contrato.num_orden || null
+      fechaInicioVig: this.formatFecha(inicio),
+      fechaFinVig: this.formatFecha(fin),
+      tipcontCodigo: tipContrato ? parseInt(tipContrato) : null,
+      contFechaInicioVigencia: inicio || null,
+      pecoNumeroOrden: numOrden ? parseInt(numOrden) : null
     });
 
     // cg$consultar_riesgo_aseg Step 1: Fill user data from contract (CGFK$CHK_LLAMADA_LLAMADA_PR2)
@@ -732,7 +737,8 @@ export class LlamadaFormComponent implements OnInit {
       telefonoLlamada: raw.telefonoLlamada, severidad: raw.severidad,
       lineaNegocio: raw.lineaNegocio, pais: raw.pais ? String(raw.pais) : '1',
       tlgCodigo: raw.tlgCodigo, placaRiesgo: raw.placaRiesgo || raw.dspRiesgoValor,
-      tipcontCodigo: raw.tipcontCodigo, pecoNumeroOrden: raw.pecoNumeroOrden
+      tipcontCodigo: raw.tipcontCodigo, contFechaInicioVigencia: raw.contFechaInicioVigencia,
+      pecoNumeroOrden: raw.pecoNumeroOrden
     };
     if (raw.numero) {
       this.casoService.updateCase(raw.numero, request).subscribe(res => {
@@ -776,7 +782,41 @@ export class LlamadaFormComponent implements OnInit {
       observacionesLar: caso.observacionesLar || '', codigoCampo: caso.codigoCampo,
       origen: caso.origen || 'LLA_SIAB'
     });
-    if (caso.ramoCodigo && caso.productoCodigo) { this.loadCamposBusqueda(); }
+    this.riesgoQuery = caso.placaRiesgo || '';
+    if (caso.dspCiudad && caso.locgeCodigo) {
+      this.selectedCity = { locgeCodigo: caso.locgeCodigo, nombre: caso.dspCiudad, departamento: caso.dspDpto || '', tlgCodigo: caso.tlgCodigo || 3 } as LocalizacionDTO;
+    }
+    if (caso.ramoCodigo && caso.productoCodigo) {
+      this.loadCausas();
+      this.loadCamposBusqueda();
+    }
+    // Load contract data (user, tomador, preferencial, tipo asistencia, cobertura)
+    if (caso.contNumeroContrato) {
+      this.polizaService.getDatosContrato(caso.contNumeroContrato).subscribe(res => {
+        if (res.data) {
+          this.llamadaForm.patchValue({
+            usuNumeroDocumento: res.data.usuNumeroDocumento || caso.usuNumeroDocumento || '',
+            dspNombre: res.data.nombreUsuario || caso.dspNombre || '',
+            dspTomador: res.data.nombreTomador || caso.dspTomador || '',
+            preferencial: res.data.preferencial || caso.preferencial || 'N'
+          });
+        }
+      });
+      if (caso.ramoCodigo && caso.productoCodigo && caso.riesgoCodigo) {
+        this.polizaService.getRiesgosCargue(
+          String(caso.ramoCodigo), String(caso.productoCodigo), caso.riesgoCodigo,
+          caso.tipcontCodigo || 1, caso.contNumeroContrato,
+          caso.contFechaInicioVigencia ? String(caso.contFechaInicioVigencia) : '', caso.pecoNumeroOrden || 1
+        ).subscribe(res => {
+          if (res.data) {
+            this.llamadaForm.patchValue({
+              dspTipoAsistencia: res.data.tipoAsistencia || '',
+              dspOpcionCobertura: res.data.opcionCobertura || ''
+            });
+          }
+        });
+      }
+    }
   }
 
   // =============================================

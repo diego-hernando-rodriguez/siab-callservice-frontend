@@ -60,6 +60,9 @@ export interface LlamadaDTO {
   origen?: string;
   controlCarta?: string;
   estadoPoliza?: string;
+  contFechaInicioVigencia?: string;
+  tipcontCodigo?: number;
+  pecoNumeroOrden?: number;
   tlgCodigo?: number;
   dspCiudad?: string;
   // Descriptive fields from PKG_DESCRIPTORES
@@ -108,6 +111,9 @@ export interface CasoRequestDTO {
   tlgCodigo?: number;
   dspCiudad?: string;
   placaRiesgo?: string;
+  tipcontCodigo?: number;
+  contFechaInicioVigencia?: string;
+  pecoNumeroOrden?: number;
 }
 
 /** @deprecated Use CasoRequestDTO instead */
@@ -211,6 +217,9 @@ export interface PolizaValidacionDTO {
   ramoCodigo?: number;
   productoCodigo?: number;
   estadoPoliza?: string;
+  contFechaInicioVigencia?: string;
+  tipcontCodigo?: number;
+  pecoNumeroOrden?: number;
   pideIdTitular?: boolean;
 }
 
